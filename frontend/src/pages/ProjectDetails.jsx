@@ -63,7 +63,7 @@ export default function ProjectDetails() {
     if (!id) return
     const socket = io(backendHost, {
       withCredentials: true,
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
     })
     socketRef.current = socket
     socket.emit("joinProject", id)

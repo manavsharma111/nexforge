@@ -5,12 +5,26 @@ let io
 let metricsInterval
 
 const initSocket = (server) => {
+  const allowedOrigins = [
+    "http://localhost:5173",
+    process.env.CLIENT_URL,
+  ].filter(Boolean)
+
   io = new Server(server, {
     cors: {
-      origin: ["http://localhost:5173", process.env.CLIENT_URL],
+      origin: (origin, callback) => {
+        // Allow requests with no origin (e.g., mobile apps, curl) or matching origins
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true)
+        } else {
+          callback(new Error(`CORS blocked: ${origin}`))
+        }
+      },
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE"],
     },
+    // polling first ensures Railway's proxy layer doesn't block the upgrade
+    transports: ["polling", "websocket"],
   })
 
   io.on("connection", (socket) => {

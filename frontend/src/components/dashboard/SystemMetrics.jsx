@@ -40,7 +40,7 @@ export default function SystemMetrics() {
     const backendHost = API_URL.replace("/api", "")
     const socket = io(backendHost, {
       withCredentials: true,
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
     })
 
     socket.emit("joinDashboard")
