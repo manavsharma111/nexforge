@@ -249,8 +249,8 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
         throw new Error("Failed to extract CLI zip file: " + err.message)
       }
     } else {
-      // Standard GitHub deployment: Download repository as ZIP via GitHub API
-      // (No git required — works on any platform including Railway)
+      // Standard GitHub deployment: Download to /tmp (large ephemeral disk)
+      // to avoid filling up the small Railway volume during build
       await appendLog(`📥 Downloading repository: ${project.githubRepoUrl}...`)
 
       const repoMatch = project.githubRepoUrl.match(
@@ -279,11 +279,13 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
         throw new Error(`Failed to download repository (HTTP ${status}). Check repo URL and GitHub token.`)
       }
 
-      const tmpZipPath = projectDir + ".zip"
-      const tmpExtractPath = projectDir + "_extract"
+      // Use /tmp for source + build (large disk), volume only for final artifacts
+      const tmpSrcDir = `/tmp/nexforge_build_${deployment._id.toString()}`
+      const tmpZipPath = `${tmpSrcDir}.zip`
+      const tmpExtractPath = `${tmpSrcDir}_extract`
 
       fs.writeFileSync(tmpZipPath, zipData)
-      await appendLog(`✅ Download complete. Extracting...`)
+      await appendLog(`✅ Download complete. Extracting to /tmp...`)
 
       fs.mkdirSync(tmpExtractPath, { recursive: true })
       await extractZip(tmpZipPath, { dir: tmpExtractPath })
@@ -293,28 +295,36 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       if (innerFolders.length === 0) throw new Error("Downloaded archive is empty")
 
       const innerPath = path.join(tmpExtractPath, innerFolders[0])
-      fs.mkdirSync(projectDir, { recursive: true })
+      fs.mkdirSync(tmpSrcDir, { recursive: true })
 
-      // Move all files from the inner folder to projectDir
+      // Move all files from the inner folder to tmpSrcDir
       for (const file of fs.readdirSync(innerPath)) {
-        fs.renameSync(path.join(innerPath, file), path.join(projectDir, file))
+        fs.renameSync(path.join(innerPath, file), path.join(tmpSrcDir, file))
       }
 
-      // Cleanup temp files
+      // Cleanup zip and extract temp
       try { fs.rmSync(tmpZipPath) } catch (e) {}
       try { fs.rmSync(tmpExtractPath, { recursive: true, force: true }) } catch (e) {}
 
-      await appendLog(`✅ Repository extracted successfully.`)
+      await appendLog(`✅ Repository extracted to /tmp.`)
+
+      // Point projectDir to tmpSrcDir for the build phase
+      // After build, we'll copy only what's needed to the volume
+      Object.defineProperty(this, '_tmpSrcDir', { value: tmpSrcDir, writable: true })
+      // Store tmpSrcDir reference via a local variable for use below
+      // eslint-disable-next-line no-var
+      var resolvedSrcDir = tmpSrcDir
     }
 
-    // 📁 Determine Working Directory based on user's Root Directory setting
-    let workingDir = path.join(projectDir, project.rootDirectory || "./")
+    // 📁 Determine Working Directory
+    // For GitHub deploys: work in /tmp src dir; for CLI: work in volume projectDir
+    const effectiveSrcDir = (typeof resolvedSrcDir !== 'undefined') ? resolvedSrcDir : projectDir
+    let workingDir = path.join(effectiveSrcDir, project.rootDirectory || "./")
     
     // Auto-correct working directory for CLI deployments
-    // (User might have run 'nexforge deploy' inside the 'frontend' folder, making the zip root the frontend)
     if (options.source === "cli" && !fs.existsSync(path.join(workingDir, "package.json"))) {
-      if (fs.existsSync(path.join(projectDir, "package.json"))) {
-        workingDir = projectDir
+      if (fs.existsSync(path.join(effectiveSrcDir, "package.json"))) {
+        workingDir = effectiveSrcDir
         await appendLog(`📂 CLI Deployment: Auto-corrected Working Directory to root (found package.json)`)
       }
     }
@@ -378,17 +388,19 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       )
       await appendLog(`🎉 Build finished successfully.`)
 
-      // Free up disk space — node_modules not needed after frontend build
-      // Only the dist/build output folder is served
-      const nodeModulesPath = path.join(workingDir, "node_modules")
-      if (fs.existsSync(nodeModulesPath)) {
-        await appendLog(`🧹 Cleaning up node_modules to save disk space...`)
-        try {
-          await fs.promises.rm(nodeModulesPath, { recursive: true, force: true })
-          await appendLog(`✅ node_modules removed.`)
-        } catch (e) {
-          await appendLog(`⚠️ Could not remove node_modules: ${e.message}`, "error")
-        }
+      // Copy ONLY the built dist to the volume (saves volume space)
+      const outDir = project.outputDirectory || "dist"
+      const builtDistPath = path.join(workingDir, outDir)
+      const volumeDistPath = path.join(projectDir, project.rootDirectory || "./", outDir)
+
+      await appendLog(`💾 Copying build output to storage...`)
+      fs.mkdirSync(path.dirname(volumeDistPath), { recursive: true })
+      await fs.promises.cp(builtDistPath, volumeDistPath, { recursive: true })
+      await appendLog(`✅ Build output saved.`)
+
+      // Clean up /tmp build directory
+      if (typeof resolvedSrcDir !== 'undefined') {
+        try { await fs.promises.rm(resolvedSrcDir, { recursive: true, force: true }) } catch(e) {}
       }
     } else if (projectType === "NODE") {
       await appendLog(`🚀 Node/Next.js Backend Detected! Starting via PM2...`)
@@ -437,6 +449,15 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
         customEnv,
       )
       await appendLog(`🎉 PM2 Backend Process is running!`)
+
+      // For NODE projects built in /tmp: copy full app to volume so PM2 survives restarts
+      if (typeof resolvedSrcDir !== 'undefined') {
+        await appendLog(`💾 Copying app to persistent storage...`)
+        fs.mkdirSync(projectDir, { recursive: true })
+        await fs.promises.cp(resolvedSrcDir, projectDir, { recursive: true })
+        try { await fs.promises.rm(resolvedSrcDir, { recursive: true, force: true }) } catch(e) {}
+        await appendLog(`✅ App copied to volume.`)
+      }
     }
 
     // UPDATE SYMLINK TO POINT TO THIS NEW DEPLOYMENT
