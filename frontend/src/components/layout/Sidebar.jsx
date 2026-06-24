@@ -56,7 +56,7 @@ export default function Sidebar() {
     },
   ]
   const hoverNavi = () => navigate("/settings")
-
+  const landNavi = () => navigate("/")
   return (
     <aside className="w-64 bg-[#09090B] border-r border-[rgba(255,255,255,0.08)] h-screen flex flex-col shrink-0">
       <div className="p-5 flex items-center gap-3 border-b border-[rgba(255,255,255,0.04)]">
@@ -64,7 +64,8 @@ export default function Sidebar() {
           <img
             src="/NexForge.png"
             alt="Logo"
-            className="w-10 h-10"
+            className="w-10 h-10 cursor-pointer"
+            onClick={landNavi}
           />
         </div>
         <span className="text-[15px] font-semibold text-[#FFFFFF] tracking-tight">
