@@ -61,6 +61,8 @@ export default function ProjectDetails() {
 
   useEffect(() => {
     if (!id) return
+    let mounted = true
+
     const socket = io(backendHost, {
       withCredentials: true,
       transports: ["polling", "websocket"],
@@ -69,14 +71,15 @@ export default function ProjectDetails() {
     socket.emit("joinProject", id)
 
     socket.on("initial-logs", (initialLogs) => {
-      setLogs(initialLogs.map((l) => l.message))
+      if (mounted) setLogs(initialLogs.map((l) => l.message))
     })
 
     socket.on("new-log", (entry) => {
-      setLogs((prev) => [...prev, entry.message])
+      if (mounted) setLogs((prev) => [...prev, entry.message])
     })
 
     socket.on("status-change", ({ status, liveUrl }) => {
+      if (!mounted) return
       setLocalProjectState((prev) =>
         prev ? { ...prev, status, liveUrl: liveUrl || prev.liveUrl } : prev,
       )
@@ -84,9 +87,11 @@ export default function ProjectDetails() {
     })
 
     return () => {
+      mounted = false
       socket.disconnect()
     }
   }, [id, backendHost])
+
 
   const handleRedeploy = async () => {
     setDeploying(true)
