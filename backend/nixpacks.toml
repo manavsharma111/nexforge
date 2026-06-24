@@ -1,8 +1,2 @@
-# nixpacks.toml — Railway build configuration
-# Installs git so the backend can run `git clone` during deployments
-
 [phases.setup]
-nixPkgs = ["git", "nodejs_22", "npm-9_x"]
-
-[start]
-cmd = "npm start"
+nixPkgs = ["git"]

@@ -26,6 +26,12 @@ const executeCommand = (cmd, args, cwd, appendLog, customEnv = {}) => {
       child = spawn(cmd, args, { cwd, shell: false, env })
     }
 
+    // Handle spawn errors (e.g. ENOENT when git/npm is not installed)
+    // Without this, Node.js throws an unhandled 'error' event and crashes the process
+    child.on("error", (err) => {
+      reject(new Error(`Failed to start command "${cmd}": ${err.message}`))
+    })
+
     child.stdout.on("data", (data) => {
       appendLog(data.toString())
     })
