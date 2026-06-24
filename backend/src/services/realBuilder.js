@@ -373,7 +373,9 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     // Re-fetch to ensure we use the latest subdomain if user changed it during build
     const latestProj = await Project.findById(projectId)
     const finalSubdomain = latestProj?.subdomain || projectId.toString()
-    const liveUrl = `http://${finalSubdomain}.localhost:8000`
+    const baseDomain = process.env.BASE_DOMAIN || "localhost"
+    const isLocal = baseDomain === "localhost"
+    const liveUrl = isLocal ? `http://${finalSubdomain}.${baseDomain}:8000` : `https://${finalSubdomain}.${baseDomain}`
     await updateStatus("LIVE", liveUrl)
     await appendLog(`🌐 Deployment is live! URL: ${liveUrl}`)
   } catch (error) {

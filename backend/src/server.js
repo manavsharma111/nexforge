@@ -55,9 +55,10 @@ const proxies = {}
 
 app.use(async (req, res, next) => {
   const host = req.hostname
+  const baseDomain = process.env.BASE_DOMAIN || "localhost"
 
-  if (host.endsWith(".localhost") && host !== "localhost") {
-    // Parse slug and optional preview deployment ID (format: my-app--deployment123.localhost)
+  if (host.endsWith("." + baseDomain) && host !== baseDomain) {
+    // Parse slug and optional preview deployment ID (format: my-app--deployment123.baseDomain)
     const slugParts = host.split(".")[0].split("--")
     const slug = slugParts[0]
     const previewId = slugParts.length > 1 ? slugParts[1] : null

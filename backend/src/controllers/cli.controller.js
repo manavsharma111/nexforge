@@ -22,7 +22,9 @@ const handleCliDeploy = async (req, res) => {
     await enqueueDeployment(projectId, options)
 
     const project = await Project.findById(projectId)
-    const liveUrl = "http://" + (project.subdomain || projectId) + ".localhost:8000"
+    const baseDomain = process.env.BASE_DOMAIN || "localhost"
+    const isLocal = baseDomain === "localhost"
+    const liveUrl = isLocal ? "http://" + (project.subdomain || projectId) + `.${baseDomain}:8000` : "https://" + (project.subdomain || projectId) + `.${baseDomain}`
 
     res.status(200).json({ message: "CLI deployment queued successfully", projectId, liveUrl })
   } catch (error) {
