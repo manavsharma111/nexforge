@@ -1,6 +1,7 @@
 const { spawn, execSync } = require("child_process")
 const path = require("path")
 const fs = require("fs")
+const axios = require("axios")
 const extractZip = require("extract-zip")
 const Project = require("../models/project.model")
 const Deployment = require("../models/deployment.model")
@@ -214,25 +215,62 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
         throw new Error("Failed to extract CLI zip file: " + err.message)
       }
     } else {
-      // Standard GitHub deployment: Clone the repository
-      await appendLog(`🔍 Cloning repository: ${project.githubRepoUrl}...`)
+      // Standard GitHub deployment: Download repository as ZIP via GitHub API
+      // (No git required — works on any platform including Railway)
+      await appendLog(`📥 Downloading repository: ${project.githubRepoUrl}...`)
 
-      let cloneUrl = project.githubRepoUrl
-      if (token) {
-        if (cloneUrl.startsWith("https://github.com")) {
-          cloneUrl = cloneUrl.replace(
-            "https://github.com",
-            `https://oauth2:${token}@github.com`,
-          )
-        }
-      }
-      await executeCommand(
-        process.platform === "win32" ? "git.exe" : "git",
-        ["clone", "--progress", cloneUrl, projectDir],
-        DEPLOYMENTS_DIR,
-        appendLog,
-        customEnv,
+      const repoMatch = project.githubRepoUrl.match(
+        /github\.com\/([^\/]+)\/([^\/]+?)(\.git)?$/
       )
+      if (!repoMatch) throw new Error(`Invalid GitHub URL: ${project.githubRepoUrl}`)
+
+      const [, repoOwner, repoName] = repoMatch
+      const zipApiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/zipball/${branch}`
+
+      const headers = { "User-Agent": "NexForge-Platform" }
+      if (token) headers["Authorization"] = `Bearer ${token}`
+
+      let zipData
+      try {
+        const response = await axios({
+          method: "get",
+          url: zipApiUrl,
+          responseType: "arraybuffer",
+          headers,
+          maxRedirects: 10,
+        })
+        zipData = response.data
+      } catch (err) {
+        const status = err.response ? err.response.status : "network error"
+        throw new Error(`Failed to download repository (HTTP ${status}). Check repo URL and GitHub token.`)
+      }
+
+      const tmpZipPath = projectDir + ".zip"
+      const tmpExtractPath = projectDir + "_extract"
+
+      fs.writeFileSync(tmpZipPath, zipData)
+      await appendLog(`✅ Download complete. Extracting...`)
+
+      fs.mkdirSync(tmpExtractPath, { recursive: true })
+      await extractZip(tmpZipPath, { dir: tmpExtractPath })
+
+      // GitHub zipball wraps content in a root folder: {owner}-{repo}-{sha}/
+      const innerFolders = fs.readdirSync(tmpExtractPath)
+      if (innerFolders.length === 0) throw new Error("Downloaded archive is empty")
+
+      const innerPath = path.join(tmpExtractPath, innerFolders[0])
+      fs.mkdirSync(projectDir, { recursive: true })
+
+      // Move all files from the inner folder to projectDir
+      for (const file of fs.readdirSync(innerPath)) {
+        fs.renameSync(path.join(innerPath, file), path.join(projectDir, file))
+      }
+
+      // Cleanup temp files
+      try { fs.rmSync(tmpZipPath) } catch (e) {}
+      try { fs.rmSync(tmpExtractPath, { recursive: true, force: true }) } catch (e) {}
+
+      await appendLog(`✅ Repository extracted successfully.`)
     }
 
     // 📁 Determine Working Directory based on user's Root Directory setting
