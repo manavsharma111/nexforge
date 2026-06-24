@@ -56,7 +56,10 @@ app.use(async (req, res, next) => {
   const host = req.hostname
 
   if (host.endsWith(".localhost") && host !== "localhost") {
-    const slug = host.split(".")[0]
+    // Parse slug and optional preview deployment ID (format: my-app--deployment123.localhost)
+    const slugParts = host.split(".")[0].split("--")
+    const slug = slugParts[0]
+    const previewId = slugParts.length > 1 ? slugParts[1] : null
 
     try {
       const cacheKey = `route:${slug}`
@@ -80,6 +83,9 @@ app.use(async (req, res, next) => {
       const projectId = project._id.toString()
 
       if (project.projectType === "NODE" && project.internalPort) {
+        if (previewId) {
+          return res.status(400).send("Preview URLs are currently only supported for Frontend/Static projects.")
+        }
         if (!proxies[projectId]) {
           console.log(
             `[PROXY] Initializing proxy for PM2 Backend on port ${project.internalPort}`,
@@ -97,29 +103,48 @@ app.use(async (req, res, next) => {
       const outDir = project.outputDirectory || "dist"
       
       const fs = require("fs")
-      let distPath = path.join(
-        __dirname,
-        "../../deployments_storage",
-        projectId,
-        "current",
-        rootDir,
-        outDir,
-      )
+      let distPath
 
-      // Fallback for older projects deployed before the Versioning Architecture update
-      if (!fs.existsSync(distPath)) {
+      if (previewId) {
+        // Preview Deployment Routing (serves exact deployment folder)
         distPath = path.join(
           __dirname,
           "../../deployments_storage",
           projectId,
+          "_deployments",
+          previewId,
           rootDir,
           outDir,
         )
+      } else {
+        // Production Deployment Routing (serves 'current' symlink)
+        distPath = path.join(
+          __dirname,
+          "../../deployments_storage",
+          projectId,
+          "current",
+          rootDir,
+          outDir,
+        )
+
+        // Fallback for older projects deployed before the Versioning Architecture update
+        if (!fs.existsSync(distPath)) {
+          distPath = path.join(
+            __dirname,
+            "../../deployments_storage",
+            projectId,
+            rootDir,
+            outDir,
+          )
+        }
       }
 
       return express.static(distPath)(req, res, () => {
         res.sendFile(path.join(distPath, "index.html"), (err) => {
           if (err) {
+            if (previewId) {
+               return res.status(404).send("<h1>404 - Preview Not Found</h1><p>The requested preview deployment does not exist.</p>")
+            }
             return res
               .status(404)
               .send(
