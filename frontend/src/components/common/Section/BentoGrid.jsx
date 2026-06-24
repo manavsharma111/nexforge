@@ -177,13 +177,22 @@ export default function BentoGrid() {
             <div
               key={i}
               data-bento-card
-              className={`${sizeClass} group relative bg-[#111] border border-[#222] rounded-2xl p-8 flex flex-col justify-end overflow-hidden hover:border-[#444] transition-all duration-500 cursor-default`}
+              className={`${sizeClass} group relative bg-[#111] border border-[#222] rounded-2xl p-8 flex flex-col justify-end overflow-hidden transition-all duration-500 cursor-default`}
             >
-              {/* Subtle glow on hover */}
+              {/* Subtle inner glow on hover */}
               <div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-2xl"
                 style={{
                   background: `radial-gradient(600px circle at 50% 50%, ${feature.color}08, transparent 60%)`,
+                }}
+              ></div>
+
+              {/* Glowing Border on hover */}
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl border border-transparent"
+                style={{
+                  borderColor: feature.color,
+                  boxShadow: `inset 0 0 20px ${feature.color}15, 0 0 20px ${feature.color}30`
                 }}
               ></div>
 

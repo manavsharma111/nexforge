@@ -66,7 +66,7 @@ export default function Hover({ children, className = "", fillColor = "#ff007f" 
       gsap.killTweensOf(fill)
       gsap.to(fill, {
         scaleX: 0,
-        duration: 0.55,
+        duration: 0.65,
         ease: "lenis",
         transformOrigin: "right center",   // shrinks towards right
         force3D: true,

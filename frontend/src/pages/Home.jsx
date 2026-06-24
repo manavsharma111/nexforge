@@ -19,6 +19,10 @@ const Home = () => {
     <SmoothScroll>
       <div className="bg-[#040404] text-white font-sans overflow-x-hidden w-full relative">
 
+        {/* Global Background Grid */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="w-full h-full absolute top-0 left-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)', backgroundSize: '4rem 4rem', maskImage: 'radial-gradient(ellipse 80% 50% at 50% 50%, #000 70%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 80% 50% at 50% 50%, #000 70%, transparent 100%)' }}></div>
+        </div>
         {/* Navbar */}
         <nav className="flex items-center justify-between px-6 py-4 md:px-12 max-w-7xl mx-auto w-full z-50 fixed top-0 left-0 right-0 bg-[#040404]/60 backdrop-blur-xl border-b border-white/5">
           <div className="flex items-center gap-3">
@@ -31,7 +35,7 @@ const Home = () => {
             <Hover fillColor="#6366F1" className="rounded-md">
               <button
                 onClick={() => navigate("/login")}
-                className="bg-white text-black text-sm font-semibold px-5 py-2.5 outline-none"
+                className="bg-white text-black text-sm font-semibold px-5 py-2.5 outline-none border border-transparent transition-colors duration-[650ms] hover:duration-150 hover:bg-transparent hover:text-white hover:border-[#6366F1]"
               >
                 Sign Up
               </button>
