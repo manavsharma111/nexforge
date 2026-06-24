@@ -291,20 +291,13 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
 
     const cacheNodeModules = path.join(cacheDir, "node_modules")
     const targetNodeModules = path.join(workingDir, "node_modules")
-    if (fs.existsSync(cacheNodeModules)) {
-      await appendLog(`⚡ Restoring node_modules from cache...`)
-      try {
-        if (!fs.existsSync(workingDir))
-          fs.mkdirSync(workingDir, { recursive: true })
-        // Copy back from cache
-        await fs.promises.cp(cacheNodeModules, targetNodeModules, { recursive: true })
-      } catch (e) {}
-    }
+    // NOTE: node_modules cache disabled to conserve disk space on Railway (0.5 GB volume)
+    // node_modules are deleted after frontend builds anyway (only dist is served)
 
-    await appendLog(`📥 Running npm install...`)
+    await appendLog(`📥 Running npm install (production only)...`)
     await executeCommand(
       process.platform === "win32" ? "npm.cmd" : "npm",
-      ["install"],
+      ["install", "--omit=dev"],
       workingDir,
       appendLog,
       customEnv,
@@ -350,6 +343,19 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
         customEnv,
       )
       await appendLog(`🎉 Build finished successfully.`)
+
+      // Free up disk space — node_modules not needed after frontend build
+      // Only the dist/build output folder is served
+      const nodeModulesPath = path.join(workingDir, "node_modules")
+      if (fs.existsSync(nodeModulesPath)) {
+        await appendLog(`🧹 Cleaning up node_modules to save disk space...`)
+        try {
+          await fs.promises.rm(nodeModulesPath, { recursive: true, force: true })
+          await appendLog(`✅ node_modules removed.`)
+        } catch (e) {
+          await appendLog(`⚠️ Could not remove node_modules: ${e.message}`, "error")
+        }
+      }
     } else if (projectType === "NODE") {
       await appendLog(`🚀 Node/Next.js Backend Detected! Starting via PM2...`)
 
