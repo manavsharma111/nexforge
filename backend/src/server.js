@@ -6,6 +6,9 @@ const cors = require("cors")
 const cookieParser = require("cookie-parser")
 const app = express()
 const server = http.createServer(app)
+
+// Trust Railway's reverse proxy — required for express-rate-limit and correct IP detection
+app.set("trust proxy", 1)
 const connectDB = require("./config/db")
 const { initSocket, getIo } = require("./services/socket.ioService")
 const { errorHandler } = require("./middlewares/error.handling.middleware")
