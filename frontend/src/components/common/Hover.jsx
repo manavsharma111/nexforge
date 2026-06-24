@@ -83,13 +83,13 @@ export default function Hover({ children, className = "", fillColor = "#ff007f" 
     }
   }, [fillColor])
   if (isMobile) {
-    return <div className={className}>{children}</div>
+    return <div className={`inline-block ${className}`}>{children}</div>
   }
 
   return (
     <div
       ref={wrapRef}
-      className={`relative overflow-hidden ${className}`}
+      className={`relative overflow-hidden inline-block ${className}`}
       style={{ isolation: "isolate" }}
     >
       {/* GPU-accelerated fill layer */}

@@ -1,16 +1,16 @@
 {
   "name": "nexforge-cli",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "Custom Deployment CLI for NexForge",
   "main": "index.js",
   "bin": {
-    "nexforge": "./index.js"
+    "nexforge": "index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["cli", "deployment", "nexforge"],
+  "author": "Manav Sharma",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {

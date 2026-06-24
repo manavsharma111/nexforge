@@ -112,8 +112,8 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Right — Terminal (Desktop only) */}
-        <div ref={terminalRef} className="flex-1 hidden lg:block" style={{ perspective: "1000px" }}>
+        {/* Right — Terminal */}
+        <div ref={terminalRef} className="flex-1 w-full mt-8 lg:mt-0" style={{ perspective: "1000px" }}>
           <TerminalSimulator />
         </div>
 

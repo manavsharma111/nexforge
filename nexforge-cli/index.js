@@ -14,7 +14,7 @@ const os = require("os")
 const CONFIG_DIR = path.join(os.homedir(), ".nexforge")
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json")
 
-const API_BASE_URL = "http://127.0.0.1:8000/api" // Make sure this points to your deployed backend URL in production
+const API_BASE_URL = "https://nexforge-backend.up.railway.app/api" // Make sure this points to your deployed backend URL in production
 
 // Intercept axios requests to attach the CLI Token if it exists
 axios.interceptors.request.use((config) => {
