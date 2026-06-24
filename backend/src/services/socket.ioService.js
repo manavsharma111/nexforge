@@ -10,11 +10,20 @@ const initSocket = (server) => {
     process.env.CLIENT_URL,
   ].filter(Boolean)
 
+  // Pattern-based: allow any *.vercel.app or *.railway.app (your own deployments)
+  const allowedPatterns = [
+    /\.vercel\.app$/,
+    /\.railway\.app$/,
+  ]
+
   io = new Server(server, {
     cors: {
       origin: (origin, callback) => {
-        // Allow requests with no origin (e.g., mobile apps, curl) or matching origins
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (
+          !origin ||
+          allowedOrigins.includes(origin) ||
+          allowedPatterns.some((pattern) => pattern.test(origin))
+        ) {
           callback(null, true)
         } else {
           callback(new Error(`CORS blocked: ${origin}`))

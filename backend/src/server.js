@@ -19,9 +19,26 @@ const cliRoutes = require("./routes/cli.route")
 const AskAIRoutes = require("./routes/ai.route")
 const { initRedis, getCache, setCache } = require("./services/redis.service")
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_URL,
+].filter(Boolean)
+
+const allowedPatterns = [/\.vercel\.app$/, /\.railway\.app$/]
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", process.env.CLIENT_URL],
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        allowedPatterns.some((p) => p.test(origin))
+      ) {
+        callback(null, true)
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`))
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   }),
