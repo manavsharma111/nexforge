@@ -4,6 +4,7 @@ import ProjectCard from "./ProjectCard"
 import EmptyState from "../common/EmptyState"
 import SkeletonLoader from "../common/SkeletonLoader"
 import { FolderGit2 } from "lucide-react"
+import SmoothScroll from "../common/SmoothScroll"
 
 const containerVariants = {
   hidden: { opacity: 0 },

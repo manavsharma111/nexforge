@@ -100,7 +100,7 @@ export default function Settings() {
                 </h3>
 
                 <div className="flex items-center gap-6 mb-8">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#6366F1] to-purple-500 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                  <div className="w-20 h-20 rounded-full bg-[#6366F1] flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
                     {user?.avatar || user?.avatarUrl ? (
                       <img
                         src={user.avatar || user.avatarUrl}

@@ -75,8 +75,8 @@
   height: 100vh;
   z-index: -1;
   background: 
-    radial-gradient(circle at 15% 50%, rgba(120, 119, 198, 0.08), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.08), transparent 25%);
+    transparent, transparent 25%),
+    transparent, transparent 25%);
   pointer-events: none;
 }
 

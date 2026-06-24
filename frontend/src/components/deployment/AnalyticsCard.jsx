@@ -30,7 +30,7 @@ export default function AnalyticsCard() {
 
   return (
     <Card className="p-6 h-full flex flex-col group relative overflow-hidden">
-      <div className="absolute top-0 right-0 p-12 bg-gradient-to-bl from-[#6366F1]/5 to-transparent rounded-bl-full pointer-events-none opacity-50" />
+      <div className="absolute top-0 right-0 p-12 bg-[#6366F1]/5 rounded-bl-full pointer-events-none opacity-50" />
 
       <div className="flex items-center justify-between mb-6 relative z-10">
         <h3 className="text-sm font-medium text-[#A1A1AA]">Usage Analytics</h3>

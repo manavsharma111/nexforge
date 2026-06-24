@@ -56,7 +56,7 @@ export default function DomainCard({ project, onUpdate }) {
 
   return (
     <Card className="p-6 relative overflow-hidden group h-full flex flex-col justify-between">
-      <div className="absolute top-0 right-0 p-8 bg-gradient-to-bl from-[#6366F1]/10 to-transparent rounded-bl-full pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute top-0 right-0 p-8 bg-[#6366F1]/10 rounded-bl-full pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity" />
 
       <div className="flex flex-col relative z-10 h-full justify-between gap-8">
         <div className="flex items-start justify-between gap-4 w-full">

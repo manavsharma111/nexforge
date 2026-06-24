@@ -29,7 +29,7 @@ export default function Sidebar({ className }) {
           className="flex items-center gap-3 mb-8 cursor-pointer"
           onClick={() => navigate("/")}
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+          <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.4)]">
             <Hexagon size={18} className="text-white fill-white/20" />
           </div>
           <span className="text-lg font-bold tracking-tight text-white">
@@ -86,7 +86,7 @@ export default function Sidebar({ className }) {
               className="w-9 h-9 rounded-full border border-white/10"
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-medium border border-white/10 shadow-inner shrink-0">
+            <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-medium border border-white/10 shadow-inner shrink-0">
               {user?.username ? user.username[0].toUpperCase() : "U"}
             </div>
           )}

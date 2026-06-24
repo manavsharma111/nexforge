@@ -23,7 +23,7 @@ export default function DeployButton({
       )}
     >
       {/* Glossy overlay effect */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
 
       {isLoading ? (
         <Loader2 size={16} className="animate-spin" />

@@ -37,7 +37,7 @@ export default function ProjectCard({ project, onRedeploy, onDelete }) {
       onClick={() => navigate(`/project/${project._id}`)}
       className="cursor-pointer h-[260px]"
     >
-      <Card className="p-5 h-full flex flex-col group hover:border-[rgba(255,255,255,0.15)] hover:shadow-md transition-all">
+      <Card className="p-5 h-full flex flex-col group hover:border-[#6366F1]/40 hover:shadow-[0_0_30px_-5px_rgba(99,102,241,0.15)] transition-all duration-500">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#111827] border border-[rgba(255,255,255,0.08)] rounded-xl flex items-center justify-center text-[#FFFFFF] text-lg font-bold">

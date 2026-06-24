@@ -16,7 +16,7 @@ const AuthCallback = () => {
       try {
         const user = JSON.parse(decodeURIComponent(userStr))
         dispatch(handleOAuthSuccess({ user, accessToken }))
-        navigate("/")
+        navigate("/dashboard")
       } catch (error) {
         console.error("Failed to parse user data", error)
         navigate("/login")

@@ -8,6 +8,7 @@ import Sidebar from "./components/layout/Sidebar"
 import MobileNav from "./components/layout/MobileNav"
 
 import Login from "./pages/Login"
+import Home from "./pages/Home"
 import AuthCallback from "./pages/AuthCallback"
 import Dashboard from "./pages/Dashboard"
 import Projects from "./pages/Projects"
@@ -15,6 +16,8 @@ import ImportProject from "./pages/ImportProject"
 import Settings from "./pages/Settings"
 import ProjectDetails from "./pages/ProjectDetails"
 import Docs from "./pages/Docs"
+import DeploymentDocs from "./pages/DeploymentDocs"
+import FloatingChatbot from "./components/common/FloatingChatbot"
 
 const App = () => {
   const dispatch = useDispatch()
@@ -25,13 +28,15 @@ const App = () => {
     dispatch(checkAuth())
   }, [dispatch])
 
-  const isAuthPage =
-    location.pathname === "/login" || location.pathname.startsWith("/auth")
+  const isPublicLayout =
+    location.pathname === "/" || location.pathname === "/login" || location.pathname.startsWith("/auth") || location.pathname === "/home"
 
-  if (isAuthPage) {
+  if (isPublicLayout) {
     return (
       <div className="min-h-screen bg-[#09090B] text-[#FFFFFF] font-sans selection:bg-[#6366F1]/30 selection:text-white">
         <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/auth/success" element={<AuthCallback />} />
         </Routes>
@@ -51,15 +56,17 @@ const App = () => {
           <div className="mx-auto w-full max-w-6xl p-4 md:p-6 lg:p-8 pb-32">
             <Routes>
               <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/new" element={<ImportProject />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/docs" element={<Docs />} />
+                <Route path="/deployment-docs" element={<DeploymentDocs />} />
                 <Route path="/project/:id" element={<ProjectDetails />} />
               </Route>
             </Routes>
           </div>
+          {isAuthenticated && <FloatingChatbot />}
         </main>
       </div>
     </div>

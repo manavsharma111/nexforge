@@ -27,7 +27,7 @@ export default function CommandPalette() {
       title: "View Projects",
       icon: Folder,
       shortcut: "P",
-      action: () => navigate("/"),
+      action: () => navigate("/dashboard"),
     },
     {
       id: "new",

@@ -16,6 +16,7 @@ const githubRoutes = require("./routes/github.route")
 const domainRoutes = require("./routes/domain.route")
 const analyticsRoutes = require("./routes/analytics.route")
 const cliRoutes = require("./routes/cli.route")
+const AskAIRoutes = require("./routes/ai.route")
 const { initRedis, getCache, setCache } = require("./services/redis.service")
 
 app.use(
@@ -182,5 +183,6 @@ app.use("/api/github", githubRoutes)
 app.use("/api/domains", domainRoutes)
 app.use("/api/analytics", analyticsRoutes)
 app.use("/api/cli", cliRoutes)
+app.use('/api/ai', AskAIRoutes)
 
 app.use(errorHandler)

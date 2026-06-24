@@ -103,7 +103,7 @@ export default function ProjectDetails() {
   const handleDelete = async () => {
     try {
       await projectService.deleteProject(id)
-      navigate("/")
+      navigate("/dashboard")
     } catch (err) {
       console.error("Failed to delete project", err)
     }
@@ -130,7 +130,7 @@ export default function ProjectDetails() {
           <h2 className="text-lg font-semibold mb-2">Error Loading Project</h2>
           <p className="text-sm opacity-80">{error}</p>
           <Button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
             className="mt-6"
             variant="secondary"
           >
@@ -162,7 +162,7 @@ export default function ProjectDetails() {
   return (
     <div className="w-full animate-[fadeIn_0.3s_ease]">
       <button
-        onClick={() => navigate("/")}
+        onClick={() => navigate("/dashboard")}
         className="flex items-center gap-1.5 text-sm text-[#A1A1AA] hover:text-[#FFFFFF] transition-colors mb-6"
       >
         <ArrowLeft size={14} />

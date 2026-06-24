@@ -85,7 +85,7 @@ program
 
     console.log(chalk.cyan("✨ Let's set up a new NexForge project!"))
     
-    readline.question("What is your project name? (e.g. my-awesome-app): ", async (projectName) => {
+    readline.question("What is your project name? (e.g. my-app): ", async (projectName) => {
       if (!projectName) {
         console.log(chalk.red("Project name cannot be empty!"))
         readline.close()

@@ -70,7 +70,7 @@ export default function StatsCards({ projects }) {
         <motion.div key={i} variants={itemVariants} className="h-full">
           <TiltCard className="h-full">
             <Card className="h-full hover:border-[rgba(255,255,255,0.15)] transition-colors overflow-hidden relative group flex flex-col justify-between">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-[#A1A1AA]">
                   {stat.title}

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { LayoutDashboard, Folder, Globe, Settings, Terminal } from "lucide-react"
+import { LayoutDashboard, Folder, Globe, Settings, Terminal, FileText } from "lucide-react"
 
 const navItems = [
-  { id: "dashboard", label: "Overview", icon: LayoutDashboard, path: "/" },
+  { id: "dashboard", label: "Overview", icon: LayoutDashboard, path: "/dashboard" },
   { id: "projects", label: "Projects", icon: Folder, path: "/projects" },
   { id: "deploy", label: "New Project", icon: Globe, path: "/new" },
+  { id: "deployment-docs", label: "Guide", icon: FileText, path: "/deployment-docs" },
   { id: "docs", label: "CLI Docs", icon: Terminal, path: "/docs" },
   { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
 ]
@@ -18,11 +19,7 @@ export default function MobileNav() {
 
   // Sync active tab with current route
   useEffect(() => {
-    if (location.pathname === "/") {
-      setActiveTab("dashboard")
-      return
-    }
-    const match = navItems.find((i) => i.path !== "/" && location.pathname.startsWith(i.path))
+    const match = navItems.find((i) => location.pathname === i.path || (i.path !== "/" && location.pathname.startsWith(i.path)))
     if (match) {
       setActiveTab(match.id)
     }

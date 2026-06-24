@@ -9,6 +9,7 @@ import {
   ChevronUp,
   Folder,
   Terminal,
+  FileText,
 } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { logoutUser } from "../../redux/slices/authSlice"
@@ -29,10 +30,16 @@ export default function Sidebar() {
           id: "dashboard",
           icon: LayoutDashboard,
           label: "Overview",
-          path: "/",
+          path: "/dashboard",
         },
         { id: "projects", icon: Folder, label: "Projects", path: "/projects" },
         { id: "deploy", icon: Globe, label: "New Project", path: "/new" },
+      ],
+    },
+    {
+      title: "Documentation",
+      items: [
+        { id: "deployment-docs", icon: FileText, label: "Platform Guide", path: "/deployment-docs" },
         { id: "docs", icon: Terminal, label: "CLI Docs", path: "/docs" },
       ],
     },
@@ -110,7 +117,7 @@ export default function Sidebar() {
           onClick={hoverNavi}
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#6366F1] to-purple-500 flex items-center justify-center text-white text-xs font-semibold shrink-0 overflow-hidden">
+            <div className="w-8 h-8 rounded-full bg-[#6366F1] flex items-center justify-center text-white text-xs font-semibold shrink-0 overflow-hidden">
               {user?.avatar || user?.avatarUrl ? (
                 <img
                   src={user.avatar || user.avatarUrl}

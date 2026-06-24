@@ -12,7 +12,7 @@ export default function SkeletonLoader({ className, ...props }) {
       {...props}
     >
       <motion.div
-        className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/[0.05] to-transparent"
+        className="absolute inset-0 -translate-x-full bg-transparent"
         animate={{
           translateX: ["-100%", "100%"],
         }}

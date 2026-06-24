@@ -1,0 +1,59 @@
+import React from "react"
+import { useNavigate } from "react-router-dom"
+import SmoothScroll from "../components/common/SmoothScroll"
+import Hover from "../components/common/Hover"
+
+
+// Section Components
+import HeroSection from "../components/common/Section/HeroSection"
+import TechMarquee from "../components/common/Section/TechMarquee"
+import BentoGrid from "../components/common/Section/BentoGrid"
+import AnalyticsSection from "../components/common/Section/AnalyticsSection"
+import TrustSection from "../components/common/Section/TrustSection"
+import CtaSection from "../components/common/Section/CtaSection"
+
+const Home = () => {
+  const navigate = useNavigate()
+
+  return (
+    <SmoothScroll>
+      <div className="bg-[#040404] text-white font-sans overflow-x-hidden w-full relative">
+
+        {/* Navbar */}
+        <nav className="flex items-center justify-between px-6 py-4 md:px-12 max-w-7xl mx-auto w-full z-50 fixed top-0 left-0 right-0 bg-[#040404]/60 backdrop-blur-xl border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <img src="/NexForge.png" alt="NexForge Logo" className="w-8 h-8" />
+            <span className="font-semibold text-lg tracking-tight">NexForge</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <button onClick={() => window.lenis?.scrollTo("#features", { duration: 1.5 })} className="text-sm text-[#888] hover:text-white transition-colors hidden md:block cursor-pointer bg-transparent border-none outline-none">Features</button>
+            <button onClick={() => window.lenis?.scrollTo("#analytics", { duration: 1.5 })} className="text-sm text-[#888] hover:text-white transition-colors hidden md:block cursor-pointer bg-transparent border-none outline-none">Analytics</button>
+            <Hover fillColor="#6366F1" className="rounded-md">
+              <button
+                onClick={() => navigate("/login")}
+                className="bg-white text-black text-sm font-semibold px-5 py-2.5 outline-none"
+              >
+                Sign Up
+              </button>
+            </Hover>
+          </div>
+        </nav>
+
+        {/* Sections */}
+        <HeroSection />
+        <TechMarquee />
+        <div id="features">
+          <BentoGrid />
+        </div>
+        <div id="analytics">
+          <AnalyticsSection />
+        </div>
+        <TrustSection />
+        <CtaSection />
+
+      </div>
+    </SmoothScroll>
+  )
+}
+
+export default Home
