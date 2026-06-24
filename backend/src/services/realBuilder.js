@@ -138,6 +138,40 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     // VERSIONING ARCHITECTURE: Each deployment gets its own folder
     const projectDir = path.join(baseProjectDir, deployment._id.toString())
 
+    // AUTO-CLEANUP: Delete all old deployment folders to free disk space
+    // Only keep the folder that 'current' symlink points to (the live deployment)
+    try {
+      const currentSymlinkPath = path.join(baseProjectDir, "current")
+      let liveDeploymentId = null
+      if (fs.existsSync(currentSymlinkPath)) {
+        try {
+          const realPath = fs.realpathSync(currentSymlinkPath)
+          liveDeploymentId = path.basename(realPath)
+        } catch (e) {}
+      }
+
+      const entries = fs.readdirSync(baseProjectDir)
+      for (const entry of entries) {
+        // Skip: current symlink, cache dir, the new deployment being created, live deployment
+        if (
+          entry === "current" ||
+          entry === "_cache" ||
+          entry === deployment._id.toString() ||
+          entry === liveDeploymentId
+        ) continue
+
+        const entryPath = path.join(baseProjectDir, entry)
+        const stat = fs.lstatSync(entryPath)
+        if (stat.isDirectory()) {
+          await appendLog(`🧹 Cleaning old deployment: ${entry}`)
+          await fs.promises.rm(entryPath, { recursive: true, force: true })
+        }
+      }
+    } catch (cleanupErr) {
+      // Non-fatal: log and continue
+      await appendLog(`⚠️ Cleanup warning: ${cleanupErr.message}`, "error")
+    }
+
     // Update pipeline status to INSTALLING
     await updateStatus("INSTALLING")
 
@@ -294,10 +328,10 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     // NOTE: node_modules cache disabled to conserve disk space on Railway (0.5 GB volume)
     // node_modules are deleted after frontend builds anyway (only dist is served)
 
-    await appendLog(`📥 Running npm install (production only)...`)
+    await appendLog(`📥 Running npm install...`)
     await executeCommand(
       process.platform === "win32" ? "npm.cmd" : "npm",
-      ["install", "--omit=dev"],
+      ["install"],
       workingDir,
       appendLog,
       customEnv,
