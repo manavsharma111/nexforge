@@ -227,12 +227,14 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       await appendLog(`📥 Downloading repository: ${project.githubRepoUrl}...`)
 
       const repoMatch = project.githubRepoUrl.match(
-        /github\.com\/([^\/]+)\/([^\/]+?)(\.git)?$/
+        /github\.com\/([^\/]+)\/([^\/]+?)(?:\.git)?(?:\/)?$/
       )
       if (!repoMatch) throw new Error(`Invalid GitHub URL: ${project.githubRepoUrl}`)
 
       const [, repoOwner, repoName] = repoMatch
       const zipApiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/zipball/${branch}`
+
+      await appendLog(`🔗 Repo: ${repoOwner}/${repoName} | Branch: ${branch} | Token: ${token ? "✅ present" : "❌ missing"}`)
 
       const headers = { "User-Agent": "NexForge-Platform" }
       if (token) headers["Authorization"] = `Bearer ${token}`
@@ -245,11 +247,41 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
           responseType: "arraybuffer",
           headers,
           maxRedirects: 10,
+          timeout: 60000,
         })
         zipData = response.data
       } catch (err) {
         const status = err.response ? err.response.status : "network error"
-        throw new Error(`Failed to download repository (HTTP ${status}). Check repo URL and GitHub token.`)
+        
+        // If 404 with token, try without token (repo might be public, token might be expired)
+        if (status === 404 && token) {
+          await appendLog(`⚠️ Download with token failed (404). Retrying as public repo...`, "error")
+          try {
+            const publicResponse = await axios({
+              method: "get",
+              url: zipApiUrl,
+              responseType: "arraybuffer",
+              headers: { "User-Agent": "NexForge-Platform" },
+              maxRedirects: 10,
+              timeout: 60000,
+            })
+            zipData = publicResponse.data
+            await appendLog(`✅ Public repo download succeeded.`)
+          } catch (pubErr) {
+            const pubStatus = pubErr.response ? pubErr.response.status : "network error"
+            throw new Error(
+              `Failed to download repository (HTTP ${pubStatus}). ` +
+              `URL tried: ${zipApiUrl}. ` +
+              `Repo may be private or not exist. Please reconnect GitHub in Settings.`
+            )
+          }
+        } else {
+          throw new Error(
+            `Failed to download repository (HTTP ${status}). ` +
+            `URL: ${zipApiUrl} | Token present: ${!!token}. ` +
+            `Please check repo URL or reconnect GitHub in Settings.`
+          )
+        }
       }
 
       // Use /tmp for source + build (large disk), volume only for final artifacts
