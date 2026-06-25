@@ -22,8 +22,16 @@ export default function DomainCard({ project, onUpdate }) {
   const [copied, setCopied] = useState(false)
 
   const url = project.liveUrl
-  const domain = url.replace("https://", "").replace("http://", "")
-  const baseHost = domain.substring(domain.indexOf("."))
+  let parsedUrl
+  let baseHost = ""
+
+  try {
+    parsedUrl = new URL(url)
+    baseHost = `.${parsedUrl.hostname.split(".").slice(1).join(".")}`
+  } catch (err) {
+    parsedUrl = null
+    baseHost = url.replace("https://", "").replace("http://", "")
+  }
 
   const handleSave = async () => {
     if (!subdomain.trim()) return
@@ -34,7 +42,7 @@ export default function DomainCard({ project, onUpdate }) {
       const response = await projectService.updateProject(project._id, {
         subdomain,
       })
-      const newLiveUrl = `http://${response.project.subdomain}${baseHost}`
+      const newLiveUrl = response.project?.liveUrl || url
 
       onUpdate({
         subdomain: response.project.subdomain,
