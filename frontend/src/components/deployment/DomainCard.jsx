@@ -159,7 +159,7 @@ export default function DomainCard({ project, onUpdate }) {
                   target="_blank"
                   rel="noreferrer"
                   title={url}
-                  className="text-sm font-medium text-[#FFFFFF] hover:text-[#6366F1] transition-colors truncate block flex-1 mr-2"
+                  className="text-sm font-medium text-[#FFFFFF] hover:text-[#6366F1] transition-colors break-all block flex-1 mr-2"
                 >
                   {url}
                 </a>
