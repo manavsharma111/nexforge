@@ -7,7 +7,7 @@ const Project = require("../models/project.model")
 const Deployment = require("../models/deployment.model")
 const Log = require("../models/log.model")
 const { getIo } = require("../services/socket.ioService")
-const { uploadDirectory, downloadDirectory, deletePrefix } = require("../config/r2")
+const { uploadDirectory, deletePrefix } = require("../config/r2")
 
 // Local temp dir for build processes only (cleaned up after upload to R2)
 const DEPLOYMENTS_DIR = path.join(__dirname, "../../../deployments_storage")
@@ -520,16 +520,9 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       try { await deletePrefix(`${r2ProjectPrefix}/current`) } catch(e) {}
       await uploadDirectory(appSrcDir, `${r2ProjectPrefix}/current/app`)
 
-      // ── Download from R2 to /tmp so PM2 can start it ─────────────────────
-      const pm2AppDir = `/tmp/nexforge_run_${projectId}`
-      await appendLog(`📥 Downloading app from R2 to runtime dir...`)
-      fs.mkdirSync(pm2AppDir, { recursive: true })
-      await downloadDirectory(r2AppPrefix, pm2AppDir)
-      await appendLog(`✅ App ready at ${pm2AppDir}`)
-
-      // Clean up build temp dirs
-      try { await fs.promises.rm(appSrcDir, { recursive: true, force: true }) } catch(e) {}
-      try { await fs.promises.rm(projectDir, { recursive: true, force: true }) } catch(e) {}
+      // ── Use the local app source directly for PM2 runtime
+      const pm2AppDir = appSrcDir
+      await appendLog(`📥 Using local app source for runtime at ${pm2AppDir}`)
 
       const portfinder = require("portfinder")
       portfinder.basePort = 3001
