@@ -8,6 +8,7 @@ import {
   X,
   Copy,
 } from "lucide-react"
+import { toast } from "react-toastify"
 import projectService from "../../services/projectService"
 import { Card } from "../ui/Card"
 import { Button } from "../ui/Button"
@@ -46,15 +47,16 @@ export default function DomainCard({ project, onUpdate }) {
       const response = await projectService.updateProject(project._id, {
         subdomain,
       })
-      const newLiveUrl = response.project?.liveUrl || url
+      const updatedProject = response.project || {}
 
-      onUpdate({
-        subdomain: response.project.subdomain,
-        liveUrl: newLiveUrl,
-      })
+      onUpdate(updatedProject)
+      setSubdomain(updatedProject.subdomain || subdomain)
+      toast.success("Subdomain updated successfully")
       setIsEditing(false)
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update subdomain")
+      const message = err.response?.data?.message || "Failed to update subdomain"
+      setError(message)
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }
