@@ -570,13 +570,11 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     const r2PublicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL
 
     if (projectType === "STATIC") {
-      // Serve static sites via subdomain-based URL (same as NODE backends)
+      // Serve static sites via path-based URL (secure, works on Railway without cert issues)
       liveUrl = isLocal
-        ? `http://${finalSubdomain}.${baseDomain}:8000`
-        : isRailway
-          ? `http://${finalSubdomain}.${baseDomain}`
-          : `https://${finalSubdomain}.${baseDomain}`
-      await appendLog(`✅ Static site served via subdomain: ${finalSubdomain}.${baseDomain}`)
+        ? `http://${finalSubdomain}.${baseDomain}:8000/p/${projectId}`
+        : `https://${baseDomain}/p/${projectId}`
+      await appendLog(`✅ Static site served via path-based platform route`)
     } else {
       // NODE/backend → proxy through Railway subdomain
       liveUrl = isLocal
