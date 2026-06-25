@@ -131,8 +131,8 @@ app.use('/assets', async (req, res, next) => {
   }
 })
 
-// --- Path-based public project route: /p/:projectId/*
-app.use('/p/:projectId/*', async (req, res, next) => {
+// --- Path-based public project route: /p/:projectId
+app.use('/p/:projectId', async (req, res, next) => {
   try {
     const projectId = req.params.projectId
     const BUCKET = process.env.CLOUDFLARE_R2_BUCKET
