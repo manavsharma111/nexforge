@@ -218,14 +218,15 @@ const updateProject = async (req, res) => {
     if (outputDirectory) project.outputDirectory = outputDirectory
     if (collaborator) project.collaborator = collaborator
 
+    let oldSubdomain = null
     if (subdomain) {
       const formattedSubdomain = subdomain
         .toLowerCase()
         .replace(/[^a-z0-9-]+/g, "")
-      const oldSubdomain = project.subdomain
+      oldSubdomain = project.subdomain
       const existing = await Project.findOne({
         subdomain: formattedSubdomain,
-        _id: { $ne: projectId },
+        _id: { $ne: project._id },
       })
       if (existing) {
         return res.status(400).json({ message: "Subdomain already taken" })
@@ -250,6 +251,7 @@ const updateProject = async (req, res) => {
     }
 
     await project.save()
+    if (oldSubdomain) await delCache(`route:${oldSubdomain}`)
     await delCache(`route:${project.subdomain}`)
     if (project._id) await delCache(`route:${project._id.toString()}`)
 
