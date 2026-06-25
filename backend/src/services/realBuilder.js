@@ -498,7 +498,21 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     const finalSubdomain = latestProj?.subdomain || projectId.toString()
     const baseDomain = process.env.BASE_DOMAIN || "localhost"
     const isLocal = baseDomain === "localhost"
-    const liveUrl = isLocal ? `http://${finalSubdomain}.${baseDomain}:8000` : `https://${finalSubdomain}.${baseDomain}`
+
+    let liveUrl
+    const r2PublicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL
+
+    if (projectType === "STATIC" && r2PublicUrl) {
+      // Static sites → serve directly from Cloudflare R2 (proper HTTPS, no domain needed!)
+      liveUrl = `${r2PublicUrl}/${projectId.toString()}/current/dist/`
+      await appendLog(`✅ Static site served from Cloudflare R2 (HTTPS ✅)`)
+    } else {
+      // NODE/backend → proxy through Railway subdomain
+      liveUrl = isLocal
+        ? `http://${finalSubdomain}.${baseDomain}:8000`
+        : `https://${finalSubdomain}.${baseDomain}`
+    }
+
     await updateStatus("LIVE", liveUrl)
     await appendLog(`🌐 Deployment is live! URL: ${liveUrl}`)
     await appendLog(`☁️ Files stored in R2 at prefix: ${r2DeploymentPrefix}`)
