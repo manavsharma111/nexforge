@@ -498,21 +498,27 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     const finalSubdomain = latestProj?.subdomain || projectId.toString()
     const baseDomain = process.env.BASE_DOMAIN || "localhost"
     const isLocal = baseDomain === "localhost"
+    const isRailway = baseDomain.includes("railway.app")
 
     let liveUrl
     const r2PublicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL
 
     if (projectType === "STATIC") {
-      // Frontend static apps often generate absolute paths like /assets/*. Use the platform domain so asset URLs resolve correctly.
+      // Frontend static apps — serve through platform route
+      // Use HTTP on Railway (handles HTTPS at edge), HTTPS elsewhere
       liveUrl = isLocal
         ? `http://${finalSubdomain}.${baseDomain}:8000`
-        : `https://${finalSubdomain}.${baseDomain}`
-      await appendLog(`✅ Static site served through platform route (assets will resolve correctly)`)
+        : isRailway
+          ? `http://${finalSubdomain}.${baseDomain}`
+          : `https://${finalSubdomain}.${baseDomain}`
+      await appendLog(`✅ Static site served through platform route`)
     } else {
       // NODE/backend → proxy through Railway subdomain
       liveUrl = isLocal
         ? `http://${finalSubdomain}.${baseDomain}:8000`
-        : `https://${finalSubdomain}.${baseDomain}`
+        : isRailway
+          ? `http://${finalSubdomain}.${baseDomain}`
+          : `https://${finalSubdomain}.${baseDomain}`
     }
 
     await updateStatus("LIVE", liveUrl)
