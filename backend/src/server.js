@@ -178,7 +178,8 @@ app.use('/p/:projectId', async (req, res, next) => {
       secure: process.env.NODE_ENV === 'production',
     })
 
-    const served = await serveProjectDist(projectId, req.path, res)
+    const projectPath = req.path.replace(`/p/${projectId}`, '') || '/'
+    const served = await serveProjectDist(projectId, projectPath, res)
     if (served) return
 
     return res.status(404).send('<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>')
