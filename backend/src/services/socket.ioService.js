@@ -19,14 +19,29 @@ const initSocket = (server) => {
   io = new Server(server, {
     cors: {
       origin: (origin, callback) => {
-        if (
-          !origin ||
-          allowedOrigins.includes(origin) ||
-          allowedPatterns.some((pattern) => pattern.test(origin))
-        ) {
-          callback(null, true)
-        } else {
-          callback(new Error(`CORS blocked: ${origin}`))
+        try {
+          // Allow non-browser (no origin) requests
+          if (!origin) return callback(null, true)
+
+          // Fast-path exact origins
+          if (allowedOrigins.includes(origin)) return callback(null, true)
+
+          // Normalize to hostname for pattern matching
+          let hostname = origin
+          try {
+            hostname = new URL(origin).hostname
+          } catch (e) {
+            // fallback to original origin string
+            hostname = origin
+          }
+
+          if (allowedPatterns.some((pattern) => pattern.test(hostname))) {
+            return callback(null, true)
+          }
+
+          return callback(new Error(`CORS blocked: ${origin}`))
+        } catch (err) {
+          return callback(new Error(`CORS check failed: ${err.message}`))
         }
       },
       credentials: true,
