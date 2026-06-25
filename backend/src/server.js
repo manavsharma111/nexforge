@@ -81,10 +81,17 @@ const getProjectIdFromReferer = (referer) => {
   try {
     const url = new URL(referer)
     const match = url.pathname.match(/^\/p\/([A-Za-z0-9]+)(?:\/|$)/)
-    return match ? match[1] : null
+    if (match) return match[1]
+    return url.searchParams.get('projectId') || url.searchParams.get('p')
   } catch (e) {
     return null
   }
+}
+
+const resolveProjectId = (req) => {
+  if (req.query.projectId) return req.query.projectId
+  if (req.query.p) return req.query.p
+  return getProjectIdFromReferer(req.get('referer'))
 }
 
 const serveR2Asset = async (projectId, assetPath, res) => {
@@ -109,8 +116,7 @@ const serveR2Asset = async (projectId, assetPath, res) => {
 }
 
 app.use('/assets', async (req, res, next) => {
-  const referer = req.get('referer')
-  const projectId = getProjectIdFromReferer(referer)
+  const projectId = resolveProjectId(req)
   if (!projectId) return next()
 
   const assetPath = req.originalUrl.split('?')[0]
@@ -126,18 +132,14 @@ app.use('/assets', async (req, res, next) => {
 })
 
 // --- Path-based public project route: /p/:projectId/*
-app.use('/p/:projectId', async (req, res, next) => {
+app.use('/p/:projectId/*', async (req, res, next) => {
   try {
     const projectId = req.params.projectId
     const BUCKET = process.env.CLOUDFLARE_R2_BUCKET
 
-    // Determine R2 prefix (always use current for published projects)
+    // For SPA routing, serve index.html for the main project path and rewrite the URL in the page.
     const r2Prefix = `${projectId}/current/dist`
-
-    // File path inside the dist (e.g. /index.html, /assets/main.js)
-    const basePath = `/p/${projectId}`
-    let filePath = req.path.replace(basePath, '')
-    if (!filePath || filePath === '/') filePath = '/index.html'
+    const filePath = '/index.html'
     const r2Key = `${r2Prefix}${filePath}`
 
     const tryServeR2File = async (key) => {
@@ -159,9 +161,7 @@ app.use('/p/:projectId', async (req, res, next) => {
 
     const served = await tryServeR2File(r2Key)
     if (!served) {
-      const fallbackKey = `${r2Prefix}/index.html`
-      const fallbackServed = await tryServeR2File(fallbackKey)
-      if (!fallbackServed) return res.status(404).send('<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>')
+      return res.status(404).send('<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>')
     }
     return
   } catch (e) {
