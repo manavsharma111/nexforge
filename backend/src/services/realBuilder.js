@@ -505,7 +505,7 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     if (projectType === "STATIC" && r2PublicUrl) {
       // Static sites → serve directly from Cloudflare R2 (proper HTTPS, no domain needed!)
       // R2 doesn't serve directory index, so point directly to index.html
-      liveUrl = `${r2PublicUrl}/${projectId.toString()}/current/dist/`
+      liveUrl = `${r2PublicUrl}/${projectId.toString()}/current/dist/index.html`
       await appendLog(`✅ Static site served from Cloudflare R2 (HTTPS ✅)`)
     } else {
       // NODE/backend → proxy through Railway subdomain

@@ -8,6 +8,7 @@ const {
 } = require("@aws-sdk/client-s3")
 const fs = require("fs")
 const path = require("path")
+const mime = require("mime-types")
 
 // ─── R2 Client (S3-compatible) ───────────────────────────────────────────────
 
@@ -26,6 +27,7 @@ const BUCKET = process.env.CLOUDFLARE_R2_BUCKET
 const uploadFile = async (localFilePath, r2Key) => {
   const fileStream = fs.createReadStream(localFilePath)
   const stat = fs.statSync(localFilePath)
+  const contentType = mime.lookup(r2Key) || "application/octet-stream"
 
   await r2Client.send(
     new PutObjectCommand({
@@ -33,6 +35,7 @@ const uploadFile = async (localFilePath, r2Key) => {
       Key: r2Key,
       Body: fileStream,
       ContentLength: stat.size,
+      ContentType: contentType,
     })
   )
 }
