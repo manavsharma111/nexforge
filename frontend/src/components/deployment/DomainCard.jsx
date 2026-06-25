@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   Globe,
   ExternalLink,
@@ -18,11 +18,17 @@ export default function DomainCard({ project, onUpdate }) {
 
   const [isEditing, setIsEditing] = useState(false)
   const [subdomain, setSubdomain] = useState(project.subdomain || "")
+  const [liveUrl, setLiveUrl] = useState(project.liveUrl || "")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(false)
 
-  const url = project.liveUrl
+  useEffect(() => {
+    setSubdomain(project.subdomain || "")
+    setLiveUrl(project.liveUrl || "")
+  }, [project.subdomain, project.liveUrl])
+
+  const url = liveUrl
   let parsedUrl
   let baseHost = ""
   let domain = url
@@ -51,6 +57,7 @@ export default function DomainCard({ project, onUpdate }) {
 
       onUpdate(updatedProject)
       setSubdomain(updatedProject.subdomain || subdomain)
+      setLiveUrl(updatedProject.liveUrl || liveUrl)
       toast.success("Subdomain updated successfully")
       setIsEditing(false)
     } catch (err) {
