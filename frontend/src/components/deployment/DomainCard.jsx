@@ -24,13 +24,17 @@ export default function DomainCard({ project, onUpdate }) {
   const url = project.liveUrl
   let parsedUrl
   let baseHost = ""
+  let domain = url
 
   try {
     parsedUrl = new URL(url)
     baseHost = `.${parsedUrl.hostname.split(".").slice(1).join(".")}`
+    domain = parsedUrl.hostname
   } catch (err) {
     parsedUrl = null
-    baseHost = url.replace("https://", "").replace("http://", "")
+    const stripped = url.replace("https://", "").replace("http://", "")
+    baseHost = stripped
+    domain = stripped
   }
 
   const handleSave = async () => {
