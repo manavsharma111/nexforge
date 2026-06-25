@@ -76,6 +76,51 @@ const { createProxyMiddleware } = require("http-proxy-middleware")
 
 const proxies = {}
 
+// --- Path-based public project route: /p/:projectId/*
+app.use('/p/:projectId', async (req, res, next) => {
+  try {
+    const projectId = req.params.projectId
+    const BUCKET = process.env.CLOUDFLARE_R2_BUCKET
+
+    // Determine R2 prefix (always use current for published projects)
+    const r2Prefix = `${projectId}/current/dist`
+
+    // File path inside the dist (e.g. /index.html, /assets/main.js)
+    const basePath = `/p/${projectId}`
+    let filePath = req.path.replace(basePath, '')
+    if (!filePath || filePath === '/') filePath = '/index.html'
+    const r2Key = `${r2Prefix}${filePath}`
+
+    const tryServeR2File = async (key) => {
+      try {
+        const response = await r2Client.send(
+          new GetObjectCommand({ Bucket: BUCKET, Key: key })
+        )
+        const contentType = mime.lookup(key) || 'application/octet-stream'
+        res.setHeader('Content-Type', contentType)
+        res.setHeader('Cache-Control', 'public, max-age=86400')
+        if (response.ContentLength) res.setHeader('Content-Length', response.ContentLength)
+        response.Body.pipe(res)
+        return true
+      } catch (err) {
+        if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) return false
+        throw err
+      }
+    }
+
+    const served = await tryServeR2File(r2Key)
+    if (!served) {
+      const fallbackKey = `${r2Prefix}/index.html`
+      const fallbackServed = await tryServeR2File(fallbackKey)
+      if (!fallbackServed) return res.status(404).send('<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>')
+    }
+    return
+  } catch (e) {
+    console.error('Path-based serve error:', e)
+    return res.status(500).send('Error loading deployment from storage.')
+  }
+})
+
 app.use(async (req, res, next) => {
   const host = req.hostname
   const baseDomain = process.env.BASE_DOMAIN || "localhost"

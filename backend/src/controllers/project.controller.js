@@ -222,6 +222,7 @@ const updateProject = async (req, res) => {
       const formattedSubdomain = subdomain
         .toLowerCase()
         .replace(/[^a-z0-9-]+/g, "")
+      const oldSubdomain = project.subdomain
       const existing = await Project.findOne({
         subdomain: formattedSubdomain,
         _id: { $ne: projectId },
@@ -233,11 +234,14 @@ const updateProject = async (req, res) => {
       if (project.liveUrl) {
         try {
           const url = new URL(project.liveUrl)
-          const hostParts = url.host.split(".")
-          if (hostParts.length > 1) {
-            hostParts[0] = formattedSubdomain
-            url.host = hostParts.join(".")
-            project.liveUrl = url.toString()
+          // Only rewrite host if it refers to the old subdomain (avoid altering path-based liveUrl)
+          if (oldSubdomain && url.hostname.startsWith(oldSubdomain + ".")) {
+            const hostParts = url.host.split(".")
+            if (hostParts.length > 1) {
+              hostParts[0] = formattedSubdomain
+              url.host = hostParts.join(".")
+              project.liveUrl = url.toString()
+            }
           }
         } catch (e) {
           console.error("Failed to parse liveUrl", e)

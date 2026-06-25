@@ -24,12 +24,11 @@ const handleCliDeploy = async (req, res) => {
     const project = await Project.findById(projectId)
     const baseDomain = process.env.BASE_DOMAIN || "localhost"
     const isLocal = baseDomain === "localhost"
-    const isRailway = baseDomain.includes("railway.app")
-    const liveUrl = isLocal 
-      ? "http://" + (project.subdomain || projectId) + `.${baseDomain}:8000` 
-      : isRailway
-        ? "http://" + (project.subdomain || projectId) + `.${baseDomain}`
-        : "https://" + (project.subdomain || projectId) + `.${baseDomain}`
+
+    // Use path-based live URL to avoid subdomain SSL issues in production
+    const liveUrl = isLocal
+      ? "http://" + (project.subdomain || projectId) + `.${baseDomain}:8000/p/${projectId}`
+      : `https://${baseDomain}/p/${projectId}`
 
     res.status(200).json({ message: "CLI deployment queued successfully", projectId, liveUrl })
   } catch (error) {
