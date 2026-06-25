@@ -178,7 +178,7 @@ app.use('/p/:projectId', async (req, res, next) => {
       secure: process.env.NODE_ENV === 'production',
     })
 
-    const projectPath = req.path || '/'
+    const projectPath = req.path.replace(`/p/${projectId}`, '') || '/'
     const served = await serveProjectDist(projectId, projectPath, res)
     if (served) return
 
