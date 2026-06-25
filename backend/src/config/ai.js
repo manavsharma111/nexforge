@@ -58,7 +58,7 @@ const callGroq = async (prompt) => {
 
     const response = await withTimeout(
         groq.chat.completions.create({
-            model: "llama3-8b-8192",
+            model: "llama-3.3-70b-versatile",
             messages: [
                 { role: "system", content: "You are NexAI, an expert assistant for the NexForge deployment platform." },
                 { role: "user", content: prompt }
