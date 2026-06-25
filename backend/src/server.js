@@ -76,6 +76,53 @@ const { createProxyMiddleware } = require("http-proxy-middleware")
 
 const proxies = {}
 
+const getProjectIdFromReferer = (referer) => {
+  if (!referer) return null
+  try {
+    const url = new URL(referer)
+    const match = url.pathname.match(/^\/p\/([A-Za-z0-9]+)(?:\/|$)/)
+    return match ? match[1] : null
+  } catch (e) {
+    return null
+  }
+}
+
+const serveR2Asset = async (projectId, assetPath, res) => {
+  const BUCKET = process.env.CLOUDFLARE_R2_BUCKET
+  const r2Prefix = `${projectId}/current/dist`
+  const r2Key = `${r2Prefix}${assetPath}`
+
+  try {
+    const response = await r2Client.send(
+      new GetObjectCommand({ Bucket: BUCKET, Key: r2Key })
+    )
+    const contentType = mime.lookup(r2Key) || 'application/octet-stream'
+    res.setHeader('Content-Type', contentType)
+    res.setHeader('Cache-Control', 'public, max-age=86400')
+    if (response.ContentLength) res.setHeader('Content-Length', response.ContentLength)
+    response.Body.pipe(res)
+    return true
+  } catch (err) {
+    if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) return false
+    throw err
+  }
+}
+
+app.use('/assets', async (req, res, next) => {
+  const referer = req.get('referer')
+  const projectId = getProjectIdFromReferer(referer)
+  if (!projectId) return next()
+
+  try {
+    const served = await serveR2Asset(projectId, req.path, res)
+    if (served) return
+    return next()
+  } catch (error) {
+    console.error('Asset serve error:', error)
+    return res.status(500).send('Error loading asset from storage.')
+  }
+})
+
 // --- Path-based public project route: /p/:projectId/*
 app.use('/p/:projectId', async (req, res, next) => {
   try {
