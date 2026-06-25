@@ -113,8 +113,10 @@ app.use('/assets', async (req, res, next) => {
   const projectId = getProjectIdFromReferer(referer)
   if (!projectId) return next()
 
+  const assetPath = req.originalUrl.split('?')[0]
+
   try {
-    const served = await serveR2Asset(projectId, req.path, res)
+    const served = await serveR2Asset(projectId, assetPath, res)
     if (served) return
     return next()
   } catch (error) {
