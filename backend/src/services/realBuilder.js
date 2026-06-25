@@ -232,56 +232,53 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       if (!repoMatch) throw new Error(`Invalid GitHub URL: ${project.githubRepoUrl}`)
 
       const [, repoOwner, repoName] = repoMatch
-      const zipApiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/zipball/${branch}`
+      const altBranch = branch === "main" ? "master" : "main"
 
       await appendLog(`🔗 Repo: ${repoOwner}/${repoName} | Branch: ${branch} | Token: ${token ? "✅ present" : "❌ missing"}`)
 
-      const headers = { "User-Agent": "NexForge-Platform" }
-      if (token) headers["Authorization"] = `Bearer ${token}`
+      // Try downloading with multiple fallback strategies
+      const tryDownload = async (branchName, useToken) => {
+        const url = `https://api.github.com/repos/${repoOwner}/${repoName}/zipball/${branchName}`
+        const hdrs = { "User-Agent": "NexForge-Platform" }
+        if (useToken && token) hdrs["Authorization"] = `Bearer ${token}`
+        const res = await axios({ method: "get", url, responseType: "arraybuffer", headers: hdrs, maxRedirects: 10, timeout: 60000 })
+        return { data: res.data, branch: branchName }
+      }
 
       let zipData
-      try {
-        const response = await axios({
-          method: "get",
-          url: zipApiUrl,
-          responseType: "arraybuffer",
-          headers,
-          maxRedirects: 10,
-          timeout: 60000,
-        })
-        zipData = response.data
-      } catch (err) {
-        const status = err.response ? err.response.status : "network error"
-        
-        // If 404 with token, try without token (repo might be public, token might be expired)
-        if (status === 404 && token) {
-          await appendLog(`⚠️ Download with token failed (404). Retrying as public repo...`, "error")
-          try {
-            const publicResponse = await axios({
-              method: "get",
-              url: zipApiUrl,
-              responseType: "arraybuffer",
-              headers: { "User-Agent": "NexForge-Platform" },
-              maxRedirects: 10,
-              timeout: 60000,
-            })
-            zipData = publicResponse.data
-            await appendLog(`✅ Public repo download succeeded.`)
-          } catch (pubErr) {
-            const pubStatus = pubErr.response ? pubErr.response.status : "network error"
-            throw new Error(
-              `Failed to download repository (HTTP ${pubStatus}). ` +
-              `URL tried: ${zipApiUrl}. ` +
-              `Repo may be private or not exist. Please reconnect GitHub in Settings.`
-            )
+      const strategies = [
+        { branchName: branch,    useToken: true,  label: `${branch} (with token)` },
+        { branchName: branch,    useToken: false, label: `${branch} (public)` },
+        { branchName: altBranch, useToken: true,  label: `${altBranch} (with token)` },
+        { branchName: altBranch, useToken: false, label: `${altBranch} (public)` },
+      ]
+
+      let succeeded = false
+      for (const strategy of strategies) {
+        try {
+          const result = await tryDownload(strategy.branchName, strategy.useToken)
+          zipData = result.data
+          // Update branch if we fell back to alt
+          if (result.branch !== branch) {
+            await appendLog(`✅ Downloaded using branch: ${result.branch} (auto-detected)`)
+            branch = result.branch
+          } else {
+            await appendLog(`✅ Download complete.`)
           }
-        } else {
-          throw new Error(
-            `Failed to download repository (HTTP ${status}). ` +
-            `URL: ${zipApiUrl} | Token present: ${!!token}. ` +
-            `Please check repo URL or reconnect GitHub in Settings.`
-          )
+          succeeded = true
+          break
+        } catch (e) {
+          const s = e.response ? e.response.status : "network error"
+          await appendLog(`⚠️ Strategy "${strategy.label}" failed (${s}), trying next...`, "error")
         }
+      }
+
+      if (!succeeded) {
+        throw new Error(
+          `Failed to download repository after all attempts. ` +
+          `Repo: ${repoOwner}/${repoName}. ` +
+          `Please verify the repo exists and reconnect GitHub in Settings (token may be expired).`
+        )
       }
 
       // Use /tmp for source + build (large disk), volume only for final artifacts
