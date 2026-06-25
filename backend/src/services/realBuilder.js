@@ -502,11 +502,12 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     let liveUrl
     const r2PublicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL
 
-    if (projectType === "STATIC" && r2PublicUrl) {
-      // Static sites → serve directly from Cloudflare R2 (proper HTTPS, no domain needed!)
-      // R2 doesn't serve directory index, so point directly to index.html
-      liveUrl = `${r2PublicUrl}/${projectId.toString()}/current/dist/index.html`
-      await appendLog(`✅ Static site served from Cloudflare R2 (HTTPS ✅)`)
+    if (projectType === "STATIC") {
+      // Frontend static apps often generate absolute paths like /assets/*. Use the platform domain so asset URLs resolve correctly.
+      liveUrl = isLocal
+        ? `http://${finalSubdomain}.${baseDomain}:8000`
+        : `https://${finalSubdomain}.${baseDomain}`
+      await appendLog(`✅ Static site served through platform route (assets will resolve correctly)`)
     } else {
       // NODE/backend → proxy through Railway subdomain
       liveUrl = isLocal
