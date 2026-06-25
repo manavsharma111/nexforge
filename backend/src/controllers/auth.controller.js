@@ -99,10 +99,14 @@ const githubCallback = async (req, res) => {
         const refreshToken = generateRefreshToken(user._id)
 
         // Store Refresh Token in a secure HTTP-Only cookie
+        // On Railway, disable secure flag (Railway handles HTTPS at edge)
+        const isProduction = process.env.NODE_ENV === "production"
+        const isRailway = process.env.BASE_DOMAIN?.includes("railway.app")
+        
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+            secure: isProduction && !isRailway,
+            sameSite: isProduction ? "strict" : "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         })
 
@@ -164,10 +168,14 @@ const getMe = async (req, res) => {
 // logout
 const logoutUser = async (req, res) => {
     try {
+        // On Railway, disable secure flag (Railway handles HTTPS at edge)
+        const isProduction = process.env.NODE_ENV === "production"
+        const isRailway = process.env.BASE_DOMAIN?.includes("railway.app")
+        
         res.clearCookie("refreshToken", {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+            secure: isProduction && !isRailway,
+            sameSite: isProduction ? "strict" : "lax",
         })
         res.status(200).json({ message: "Logged out successfully" })
     } catch (error) {
