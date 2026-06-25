@@ -21,6 +21,9 @@ const analyticsRoutes = require("./routes/analytics.route")
 const cliRoutes = require("./routes/cli.route")
 const AskAIRoutes = require("./routes/ai.route")
 const { initRedis, getCache, setCache } = require("./services/redis.service")
+const { streamFileToResponse, r2Client } = require("./config/r2")
+const { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command } = require("@aws-sdk/client-s3")
+const mime = require("mime-types")
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -121,60 +124,59 @@ app.use(async (req, res, next) => {
         return proxies[projectId](req, res, next)
       }
 
+      // ── STATIC: Serve from Cloudflare R2 ─────────────────────────────────
       const rootDir = project.rootDirectory || "./"
       const outDir = project.outputDirectory || "dist"
-      
-      const fs = require("fs")
-      let distPath
+      const BUCKET = process.env.CLOUDFLARE_R2_BUCKET
 
+      // Determine R2 prefix
+      let r2Prefix
       if (previewId) {
-        // Preview Deployment Routing (serves exact deployment folder)
-        distPath = path.join(
-          __dirname,
-          "../../deployments_storage",
-          projectId,
-          "_deployments",
-          previewId,
-          rootDir,
-          outDir,
-        )
+        r2Prefix = `${projectId}/${previewId}/dist`
       } else {
-        // Production Deployment Routing (serves 'current' symlink)
-        distPath = path.join(
-          __dirname,
-          "../../deployments_storage",
-          projectId,
-          "current",
-          rootDir,
-          outDir,
-        )
+        r2Prefix = `${projectId}/current/dist`
+      }
 
-        // Fallback for older projects deployed before the Versioning Architecture update
-        if (!fs.existsSync(distPath)) {
-          distPath = path.join(
-            __dirname,
-            "../../deployments_storage",
-            projectId,
-            rootDir,
-            outDir,
+      // File path inside the dist (e.g. /index.html, /assets/main.js)
+      let filePath = req.path === "/" ? "/index.html" : req.path
+      let r2Key = `${r2Prefix}${filePath}`
+
+      const tryServeR2File = async (key) => {
+        try {
+          const response = await r2Client.send(
+            new GetObjectCommand({ Bucket: BUCKET, Key: key })
           )
+          const contentType = mime.lookup(key) || "application/octet-stream"
+          res.setHeader("Content-Type", contentType)
+          res.setHeader("Cache-Control", "public, max-age=86400")
+          if (response.ContentLength) res.setHeader("Content-Length", response.ContentLength)
+          response.Body.pipe(res)
+          return true
+        } catch (err) {
+          if (err.name === "NoSuchKey" || err.$metadata?.httpStatusCode === 404) return false
+          throw err
         }
       }
 
-      return express.static(distPath)(req, res, () => {
-        res.sendFile(path.join(distPath, "index.html"), (err) => {
-          if (err) {
-            if (previewId) {
-               return res.status(404).send("<h1>404 - Preview Not Found</h1><p>The requested preview deployment does not exist.</p>")
-            }
-            return res
-              .status(404)
-              .send(
-                "<h1>404 - Deployment Not Found</h1><p>The build directory could not be found or does not contain an index.html.</p>",
-              )
+      // Try exact file first, then fall back to index.html (SPA routing)
+      try {
+        const served = await tryServeR2File(r2Key)
+        if (!served) {
+          const fallbackKey = `${r2Prefix}/index.html`
+          const fallbackServed = await tryServeR2File(fallbackKey)
+          if (!fallbackServed) {
+            return res.status(404).send(
+              previewId
+                ? "<h1>404 - Preview Not Found</h1><p>The requested preview deployment does not exist.</p>"
+                : "<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>"
+            )
           }
-        })
-      })
+        }
+        return
+      } catch (r2Err) {
+        console.error("[R2 Serve Error]", r2Err)
+        return res.status(500).send("Error loading deployment from storage.")
+      }
     } catch (error) {
       console.error("Subdomain routing error:", error)
       return res.status(500).send("Internal Server Error")

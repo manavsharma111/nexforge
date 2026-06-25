@@ -7,7 +7,9 @@ const Project = require("../models/project.model")
 const Deployment = require("../models/deployment.model")
 const Log = require("../models/log.model")
 const { getIo } = require("../services/socket.ioService")
+const { uploadDirectory, downloadDirectory, deletePrefix } = require("../config/r2")
 
+// Local temp dir for build processes only (cleaned up after upload to R2)
 const DEPLOYMENTS_DIR = path.join(__dirname, "../../../deployments_storage")
 
 // Helper function to execute a shell command and stream logs
@@ -135,42 +137,13 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       fs.mkdirSync(baseProjectDir, { recursive: true })
     }
     
-    // VERSIONING ARCHITECTURE: Each deployment gets its own folder
-    const projectDir = path.join(baseProjectDir, deployment._id.toString())
+    // Each deployment gets its own R2 prefix: {projectId}/{deploymentId}/
+    const deploymentId = deployment._id.toString()
+    const r2ProjectPrefix = projectId.toString()
+    const r2DeploymentPrefix = `${r2ProjectPrefix}/${deploymentId}`
 
-    // AUTO-CLEANUP: Delete all old deployment folders to free disk space
-    // Only keep the folder that 'current' symlink points to (the live deployment)
-    try {
-      const currentSymlinkPath = path.join(baseProjectDir, "current")
-      let liveDeploymentId = null
-      if (fs.existsSync(currentSymlinkPath)) {
-        try {
-          const realPath = fs.realpathSync(currentSymlinkPath)
-          liveDeploymentId = path.basename(realPath)
-        } catch (e) {}
-      }
-
-      const entries = fs.readdirSync(baseProjectDir)
-      for (const entry of entries) {
-        // Skip: current symlink, cache dir, the new deployment being created, live deployment
-        if (
-          entry === "current" ||
-          entry === "_cache" ||
-          entry === deployment._id.toString() ||
-          entry === liveDeploymentId
-        ) continue
-
-        const entryPath = path.join(baseProjectDir, entry)
-        const stat = fs.lstatSync(entryPath)
-        if (stat.isDirectory()) {
-          await appendLog(`🧹 Cleaning old deployment: ${entry}`)
-          await fs.promises.rm(entryPath, { recursive: true, force: true })
-        }
-      }
-    } catch (cleanupErr) {
-      // Non-fatal: log and continue
-      await appendLog(`⚠️ Cleanup warning: ${cleanupErr.message}`, "error")
-    }
+    // Local temp dir for build (will be cleaned up after upload to R2)
+    const projectDir = path.join(baseProjectDir, deploymentId)
 
     // Update pipeline status to INSTALLING
     await updateStatus("INSTALLING")
@@ -393,15 +366,32 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       const builtDistPath = path.join(workingDir, outDir)
       const volumeDistPath = path.join(projectDir, project.rootDirectory || "./", outDir)
 
-      await appendLog(`💾 Copying build output to storage...`)
-      fs.mkdirSync(path.dirname(volumeDistPath), { recursive: true })
-      await fs.promises.cp(builtDistPath, volumeDistPath, { recursive: true })
-      await appendLog(`✅ Build output saved.`)
+      // ── Upload dist to Cloudflare R2 ──────────────────────────────────────
+      await appendLog(`☁️ Uploading build to Cloudflare R2...`)
+      const r2DistPrefix = `${r2DeploymentPrefix}/dist`
 
-      // Clean up /tmp build directory
+      // Delete old 'current' R2 prefix and upload new one
+      try { await deletePrefix(`${r2ProjectPrefix}/current`) } catch(e) {}
+
+      let uploadedCount = 0
+      const totalFiles = await uploadDirectory(
+        builtDistPath,
+        r2DistPrefix,
+        (done, total) => { uploadedCount = done }
+      )
+      await appendLog(`✅ Uploaded ${totalFiles} files to R2 at: ${r2DistPrefix}`)
+
+      // Also write a 'current' pointer prefix (copy references) by uploading to current prefix
+      await uploadDirectory(builtDistPath, `${r2ProjectPrefix}/current/dist`)
+      await appendLog(`🔗 Updated 'current' pointer in R2.`)
+
+      // Clean up local temp dirs
+      try { await fs.promises.rm(builtDistPath, { recursive: true, force: true }) } catch(e) {}
       if (typeof resolvedSrcDir !== 'undefined') {
         try { await fs.promises.rm(resolvedSrcDir, { recursive: true, force: true }) } catch(e) {}
       }
+      try { await fs.promises.rm(projectDir, { recursive: true, force: true }) } catch(e) {}
+
     } else if (projectType === "NODE") {
       await appendLog(`🚀 Node/Next.js Backend Detected! Starting via PM2...`)
 
@@ -424,55 +414,54 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
         }
       } catch (e) {}
 
+      // ── Upload app to R2 ─────────────────────────────────────────────────
+      const appSrcDir = typeof resolvedSrcDir !== 'undefined' ? resolvedSrcDir : projectDir
+      await appendLog(`☁️ Uploading app to Cloudflare R2...`)
+      const r2AppPrefix = `${r2DeploymentPrefix}/app`
+      await uploadDirectory(appSrcDir, r2AppPrefix)
+      await appendLog(`✅ App uploaded to R2.`)
+
+      // Update 'current' pointer in R2
+      try { await deletePrefix(`${r2ProjectPrefix}/current`) } catch(e) {}
+      await uploadDirectory(appSrcDir, `${r2ProjectPrefix}/current/app`)
+
+      // ── Download from R2 to /tmp so PM2 can start it ─────────────────────
+      const pm2AppDir = `/tmp/nexforge_run_${projectId}`
+      await appendLog(`📥 Downloading app from R2 to runtime dir...`)
+      fs.mkdirSync(pm2AppDir, { recursive: true })
+      await downloadDirectory(r2AppPrefix, pm2AppDir)
+      await appendLog(`✅ App ready at ${pm2AppDir}`)
+
+      // Clean up build temp dirs
+      try { await fs.promises.rm(appSrcDir, { recursive: true, force: true }) } catch(e) {}
+      try { await fs.promises.rm(projectDir, { recursive: true, force: true }) } catch(e) {}
+
       const portfinder = require("portfinder")
       portfinder.basePort = 3001
       internalPort = await portfinder.getPortPromise()
 
       project.internalPort = internalPort
+      // Store R2 prefix so we can re-download on restart
+      project.r2Prefix = r2AppPrefix
       await project.save()
 
       await appendLog(
         `🔌 Allocated internal port: ${internalPort}. Starting Process Manager...`,
       )
 
-      // Start using PM2 programmatically via CLI
       const pm2Name = `proj_${projectId}`
-
-      // Pass the port and user env variables
       customEnv.PORT = internalPort.toString()
+
+      const pm2WorkDir = path.join(pm2AppDir, project.rootDirectory || "./")
 
       await executeCommand(
         process.platform === "win32" ? "npx.cmd" : "npx",
         ["pm2", "start", "npm", "--name", pm2Name, "--", "start"],
-        projectDir, // NOTE: this starts it from the new version's folder
+        pm2WorkDir,
         appendLog,
         customEnv,
       )
       await appendLog(`🎉 PM2 Backend Process is running!`)
-
-      // For NODE projects built in /tmp: copy full app to volume so PM2 survives restarts
-      if (typeof resolvedSrcDir !== 'undefined') {
-        await appendLog(`💾 Copying app to persistent storage...`)
-        fs.mkdirSync(projectDir, { recursive: true })
-        await fs.promises.cp(resolvedSrcDir, projectDir, { recursive: true })
-        try { await fs.promises.rm(resolvedSrcDir, { recursive: true, force: true }) } catch(e) {}
-        await appendLog(`✅ App copied to volume.`)
-      }
-    }
-
-    // UPDATE SYMLINK TO POINT TO THIS NEW DEPLOYMENT
-    if (fs.existsSync(currentSymlink)) {
-      // In windows, we must use rimraf or fs.unlinkSync for symlinks
-      try { fs.unlinkSync(currentSymlink) } catch(e) {
-        try { fs.rmdirSync(currentSymlink) } catch(e2) {}
-      }
-    }
-    
-    // Create junction on windows or symlink on unix
-    try {
-      fs.symlinkSync(projectDir, currentSymlink, "junction")
-    } catch(e) {
-      await appendLog(`⚠️ Failed to create symlink: ${e.message}`)
     }
 
     // Re-fetch to ensure we use the latest subdomain if user changed it during build
@@ -483,6 +472,7 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     const liveUrl = isLocal ? `http://${finalSubdomain}.${baseDomain}:8000` : `https://${finalSubdomain}.${baseDomain}`
     await updateStatus("LIVE", liveUrl)
     await appendLog(`🌐 Deployment is live! URL: ${liveUrl}`)
+    await appendLog(`☁️ Files stored in R2 at prefix: ${r2DeploymentPrefix}`)
   } catch (error) {
     console.log("Error in pipeline:", error)
     await Project.findByIdAndUpdate(projectId, { status: "FAILED" })

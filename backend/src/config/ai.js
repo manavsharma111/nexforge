@@ -1,96 +1,99 @@
 const { GoogleGenAI } = require("@google/genai")
 const OpenAI = require("openai")
 const Groq = require("groq-sdk")
-const dotenv = require('dotenv').config()
+require('dotenv').config()
 
+// ─── Individual model callers ───────────────────────────────────────────────
 
-const generateAIResponse = async (req, res) => {
-    // Gemini
-    if (process.env.AI_MODEL === "GEMINI") {
-        const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+const callGemini = async (prompt) => {
+    if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not set")
+    const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+    const response = await genai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: { temperature: 0.7, maxOutputTokens: 1024 }
+    })
+    return response.text
+}
 
+const callOpenAI = async (prompt) => {
+    if (!process.env.OPENAI_API) throw new Error("OPENAI_API not set")
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API })
+    const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+            { role: "system", content: "You are NexAI, an expert assistant for the NexForge deployment platform." },
+            { role: "user", content: prompt }
+        ]
+    })
+    return response.choices[0].message.content
+}
+
+const callGroq = async (prompt) => {
+    if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY not set")
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+    const response = await groq.chat.completions.create({
+        model: "llama3-8b-8192",
+        messages: [
+            { role: "system", content: "You are NexAI, an expert assistant for the NexForge deployment platform." },
+            { role: "user", content: prompt }
+        ]
+    })
+    return response.choices[0].message.content
+}
+
+const callXAI = async (prompt) => {
+    if (!process.env.GROK_API_KEY) throw new Error("GROK_API_KEY not set")
+    const xai = new OpenAI({ apiKey: process.env.GROK_API_KEY, baseURL: "https://api.x.ai/v1" })
+    const response = await xai.chat.completions.create({
+        model: "grok-3-mini",
+        messages: [
+            { role: "system", content: "You are NexAI, an expert assistant for the NexForge deployment platform." },
+            { role: "user", content: prompt }
+        ]
+    })
+    return response.choices[0].message.content
+}
+
+// ─── Model registry ─────────────────────────────────────────────────────────
+
+const MODEL_MAP = {
+    GEMINI: callGemini,
+    OPENAI: callOpenAI,
+    GROQ:   callGroq,
+    XAI:    callXAI,
+}
+
+// ─── Main: tries primary model, auto-falls back to others if it fails ────────
+// Order: AI_MODEL env var (default GEMINI) → OPENAI → GROQ → XAI
+
+const generateAIResponse = async (prompt) => {
+    const primary = (process.env.AI_MODEL || "GEMINI").toUpperCase()
+
+    // Primary first, then remaining models
+    const allModels = Object.keys(MODEL_MAP)
+    const orderedModels = [primary, ...allModels.filter(m => m !== primary)]
+
+    const errors = []
+
+    for (const modelName of orderedModels) {
+        const caller = MODEL_MAP[modelName]
+        if (!caller) continue
         try {
-            const response = await genai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents: req.body.prompt,
-                config: {
-                    temperature: 0.5,
-                    maxOutputTokens: 100,
-                }
-            })
-
-            return response.text
-        }
-        catch (error) {
-            console.log(`Error generating content from Gemini - ${error.message}`);
-            return res.status(500).json({ message: "Failed to generate content from Gemini" })
+            console.log(`[AI] Trying model: ${modelName}`)
+            const result = await caller(prompt)
+            if (modelName !== primary) {
+                console.log(`[AI] Fallback to ${modelName} succeeded`)
+            }
+            return result
+        } catch (err) {
+            console.warn(`[AI] ${modelName} failed: ${err.message}`)
+            errors.push(`${modelName}: ${err.message}`)
         }
     }
-    // Open AI 
 
-    else if(process.env.AI_MODEL === "OPENAI") {
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
-        try {
-            const response = await openai.chat.completions.create({
-                model: "gpt-4.1",
-                messages: [
-                    { role: "system", content: "You are a helpful assistant." },
-                    { role: "user", content: req.body.prompt }
-                ]
-            })
-
-            return response.choices[0].message.content
-        }
-        catch (error) {
-            console.log(`Error generating content from Open AI - ${error.message}`);
-            return res.status(500).json({ message: "Failed to generate content from Open AI" })
-        }
-    }
-    // Groq
-    else if(process.env.AI_MODEL === "GROQ") {
-        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
-
-        try {
-            const response = await groq.chat.completions.create({
-                model: "llama3-8b-8192",
-                messages: [
-                    { role: "system", content: "You are a helpful assistant." },
-                    { role: "user", content: req.body.prompt }
-                ]
-            })
-
-            return response.choices[0].message.content
-        }
-        catch (error) {
-            console.log(`Error generating content from Groq - ${error.message}`);
-            return res.status(500).json({ message: "Failed to generate content from Groq" })
-        }
-    }
-    // xAI
-    else if(process.env.AI_MODEL === "XAI") {
-        const xai = new OpenAI({ apiKey: process.env.XAI_API_KEY, baseURL: "https://api.x.ai/v1" })
-
-        try {
-            const response = await xai.chat.completions.create({
-                model: "gpt-4.1",
-                messages: [
-                    { role: "system", content: "You are a helpful assistant." },
-                    { role: "user", content: req.body.prompt }
-                ]
-            })
-
-            return response.choices[0].message.content
-        }
-        catch (error) {
-            console.log(`Error generating content from xAI - ${error.message}`);
-            return res.status(500).json({ message: "Failed to generate content from xAI" })
-        }
-    }
-    // Invalid AI Model
-    else {
-        return res.status(500).json({ message: "Invalid AI Model" })
-    }
+    // All models failed
+    throw new Error(`All AI models failed.\n${errors.join('\n')}`)
 }
 
 module.exports = { generateAIResponse }

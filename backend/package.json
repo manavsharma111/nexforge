@@ -13,6 +13,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1075.0",
+    "@aws-sdk/lib-storage": "^3.1075.0",
     "@google/genai": "^2.10.0",
     "axios": "^1.18.0",
     "bullmq": "^5.79.1",
@@ -26,6 +28,7 @@
     "http-proxy-middleware": "^4.1.1",
     "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",
+    "mime-types": "^3.0.2",
     "mongoose": "^9.7.1",
     "multer": "^2.2.0",
     "node-cron": "^4.5.0",
