@@ -117,8 +117,8 @@ const getR2Object = async (projectId, assetPath) => {
   return { response, key: r2Key }
 }
 
-const injectProjectRoutingScript = (html, projectId) => {
-  const script = `<script>\n;(function(){\n  const match = window.location.pathname.match(/^\\/p\\/${projectId}(\\/.*)?$/)\n  if(match){\n    const stripped = match[1] || '/';\n    window.history.replaceState(null, '', stripped + window.location.search + window.location.hash);\n  }\n})()\n</script>`
+const injectProjectRoutingScript = (html) => {
+  const script = `<script>\n;(function(){\n  const match = window.location.pathname.match(/^\\/p\\/[^/]+(\\/.*)?$/)\n  if(match){\n    const stripped = match[1] || '/';\n    window.history.replaceState(null, '', stripped + window.location.search + window.location.hash);\n  }\n})()\n</script>`
   return html.replace(/<head(.*?)>/i, (match) => `${match}\n${script}`)
 }
 
