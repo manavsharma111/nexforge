@@ -518,9 +518,21 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       try { await deletePrefix(`${r2ProjectPrefix}/current`) } catch(e) {}
       await uploadDirectory(appSrcDir, `${r2ProjectPrefix}/current/app`)
 
-      // ── Use the local app source directly for PM2 runtime
-      const pm2AppDir = appSrcDir
-      await appendLog(`📥 Using local app source for runtime at ${pm2AppDir}`)
+      // ── Prepare persistent directory for PM2 runtime ─────────────────────
+      // If the build happened in /tmp, we must copy the final app to the persistent volume
+      // so PM2 can run it and it survives restarts.
+      if (typeof resolvedSrcDir !== 'undefined' && resolvedSrcDir !== projectDir) {
+        await appendLog(`💾 Copying app from temporary build directory to persistent storage...`)
+        if (fs.existsSync(projectDir)) {
+          await fs.promises.rm(projectDir, { recursive: true, force: true })
+        }
+        await fs.promises.cp(resolvedSrcDir, projectDir, { recursive: true })
+        await appendLog(`✅ App copied to: ${projectDir}`)
+        // Now we can clean up the temp build directory
+        try { await fs.promises.rm(resolvedSrcDir, { recursive: true, force: true }) } catch(e) {}
+      }
+
+      await appendLog(`📥 Using persistent app source for runtime at ${projectDir}`)
 
       const portfinder = require("portfinder")
       portfinder.basePort = 3001
@@ -538,7 +550,7 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       const pm2Name = `proj_${projectId}`
       customEnv.PORT = internalPort.toString()
 
-      const pm2WorkDir = path.join(pm2AppDir, project.rootDirectory || "./")
+      const pm2WorkDir = path.join(projectDir, project.rootDirectory || "./")
 
       await executeCommand(
         process.platform === "win32" ? "npx.cmd" : "npx",
@@ -561,7 +573,7 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     // we will consistently use a path-based URL for the live production link.
     liveUrl = isLocal
       ? `http://${finalSubdomain}.${baseDomain}:8000` // Local dev can still use subdomains
-      : `https://${baseDomain}/p/${projectId}` // Production uses path-based for all project types
+      : `https://${baseDomain}/p/${finalSubdomain}` // Production uses path-based for all project types
     await appendLog(`✅ Project will be served at path-based URL for stability.`)
 
     await updateStatus("LIVE", liveUrl)

@@ -88,10 +88,24 @@ const getProjectIdFromReferer = (referer) => {
   }
 }
 
-const resolveProjectId = (req) => {
-  if (req.query.projectId) return req.query.projectId
-  if (req.query.p) return req.query.p
-  return getProjectIdFromReferer(req.get('referer')) || req.cookies?.nexforge_project_id
+const resolveProjectId = async (req) => {
+  let identifier = req.query.projectId || req.query.p || getProjectIdFromReferer(req.get('referer')) || req.cookies?.nexforge_project_id
+  if (!identifier) return null
+
+  if (/^[0-9a-fA-F]{24}$/.test(identifier)) {
+    return identifier
+  }
+
+  const cacheKey = `route:${identifier}`
+  let project = await getCache(cacheKey)
+  if (!project) {
+    const Project = require('./models/project.model')
+    project = await Project.findOne({ subdomain: identifier }).lean()
+    if (project) {
+      await setCache(cacheKey, project, 3600)
+    }
+  }
+  return project ? project._id.toString() : null
 }
 
 const getR2Object = async (projectId, assetPath) => {
@@ -153,7 +167,7 @@ const serveProjectDist = async (projectId, reqPath, res) => {
 }
 
 app.use('/assets', async (req, res, next) => {
-  const projectId = resolveProjectId(req)
+  const projectId = await resolveProjectId(req)
   if (!projectId) return next()
 
   const assetPath = req.originalUrl.split('?')[0]
@@ -168,17 +182,22 @@ app.use('/assets', async (req, res, next) => {
   }
 })
 
-// --- Path-based public project route: /p/:projectId
-app.use('/p/:projectId', async (req, res, next) => {
+// --- Path-based public project route: /p/:slug
+app.use('/p/:slug', async (req, res, next) => {
   try {
-    const projectId = req.params.projectId
+    const slug = req.params.slug
+    const projectId = await resolveProjectId({ query: { p: slug } })
+    if (!projectId) {
+      return res.status(404).send('<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>')
+    }
+
     res.cookie('nexforge_project_id', projectId, {
       path: '/',
       sameSite: 'Lax',
       secure: process.env.NODE_ENV === 'production',
     })
 
-    const projectPath = req.path.replace(`/p/${projectId}`, '') || '/'
+    const projectPath = req.path.replace(`/p/${slug}`, '') || '/'
     const served = await serveProjectDist(projectId, projectPath, res)
     if (served) return
 
@@ -192,7 +211,7 @@ app.use('/p/:projectId', async (req, res, next) => {
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/api')) return next()
   if (req.path.startsWith('/p/')) return next()
-  const projectId = resolveProjectId(req)
+  const projectId = await resolveProjectId(req)
   if (!projectId) return next()
 
   try {
@@ -205,7 +224,7 @@ app.use(async (req, res, next) => {
 
   return next()
 })
-
+// change
 app.use(async (req, res, next) => {
   const host = req.hostname
   const baseDomain = process.env.BASE_DOMAIN || "localhost"

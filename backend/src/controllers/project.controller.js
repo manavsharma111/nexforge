@@ -242,7 +242,7 @@ const updateProject = async (req, res) => {
           // The subdomain will still be used for local development and can be used with custom domains.
           project.liveUrl = isLocal
             ? `http://${formattedSubdomain}.${baseDomain}:8000` // Local dev can still use subdomains
-            : `https://${baseDomain}/p/${project._id.toString()}` // Production uses path-based
+            : `https://${baseDomain}/p/${formattedSubdomain}` // Production uses path-based
         } catch (e) {
           console.error("Failed to regenerate liveUrl during update", e)
         }
