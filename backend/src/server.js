@@ -88,24 +88,27 @@ const getProjectIdFromReferer = (referer) => {
   }
 }
 
-const resolveProjectId = async (req) => {
+const resolveProject = async (req) => {
   let identifier = req.query.projectId || req.query.p || getProjectIdFromReferer(req.get('referer')) || req.cookies?.nexforge_project_id
   if (!identifier) return null
-
-  if (/^[0-9a-fA-F]{24}$/.test(identifier)) {
-    return identifier
-  }
 
   const cacheKey = `route:${identifier}`
   let project = await getCache(cacheKey)
   if (!project) {
     const Project = require('./models/project.model')
-    project = await Project.findOne({ subdomain: identifier }).lean()
+    const mongoose = require("mongoose")
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      project = await Project.findById(identifier).lean()
+    }
+    if (!project) {
+      project = await Project.findOne({ subdomain: identifier }).lean()
+    }
     if (project) {
-      await setCache(cacheKey, project, 3600)
+      await setCache(`route:${project.subdomain}`, project, 3600)
+      await setCache(`route:${project._id.toString()}`, project, 3600)
     }
   }
-  return project ? project._id.toString() : null
+  return project ? { projectId: project._id.toString(), slug: project.subdomain } : null
 }
 
 const getR2Object = async (projectId, assetPath) => {
@@ -117,8 +120,38 @@ const getR2Object = async (projectId, assetPath) => {
   return { response, key: r2Key }
 }
 
-const injectProjectRoutingScript = (html) => {
-  const script = `<script>\n;(function(){\n  const match = window.location.pathname.match(/^\\/p\\/[^/]+(\\/.*)?$/)\n  if(match){\n    const stripped = match[1] || '/';\n    window.history.replaceState(null, '', stripped + window.location.search + window.location.hash);\n  }\n})()\n</script>`
+const injectProjectRoutingScript = (html, slug) => {
+  const script = `<script>
+;(function() {
+  const slug = "${slug}";
+  const originalPush = window.history.pushState;
+  const originalReplace = window.history.replaceState;
+  
+  const appendSlug = (url) => {
+    if (!url) return url;
+    try {
+      const urlObj = new URL(url, window.location.origin);
+      if (urlObj.origin !== window.location.origin) return url;
+      urlObj.searchParams.set('p', slug);
+      return urlObj.pathname + urlObj.search + urlObj.hash;
+    } catch(e) { return url; }
+  };
+
+  window.history.pushState = function(state, unused, url) {
+    return originalPush.call(this, state, unused, appendSlug(url));
+  };
+  window.history.replaceState = function(state, unused, url) {
+    return originalReplace.call(this, state, unused, appendSlug(url));
+  };
+
+  const currentUrl = new URL(window.location.href);
+  if (currentUrl.pathname.startsWith('/p/')) {
+    currentUrl.pathname = '/';
+  }
+  currentUrl.searchParams.set('p', slug);
+  originalReplace.call(window.history, null, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+})();
+</script>`
   return html.replace(/<head(.*?)>/i, (match) => `${match}\n${script}`)
 }
 
@@ -136,7 +169,7 @@ const serveR2File = async (projectId, assetPath, res, options = {}) => {
         chunks.push(chunk)
       }
       const html = Buffer.concat(chunks).toString('utf8')
-      const injected = injectProjectRoutingScript(html, projectId)
+      const injected = injectProjectRoutingScript(html, options.slug)
       return res.send(injected)
     }
 
@@ -148,18 +181,20 @@ const serveR2File = async (projectId, assetPath, res, options = {}) => {
   }
 }
 
-const serveProjectDist = async (projectId, reqPath, res) => {
+const serveProjectDist = async (projectId, reqPath, res, slug) => {
   const normalizedPath = reqPath === '/' || reqPath === '' ? '/index.html' : reqPath
   const hasExtension = path.extname(normalizedPath) !== ''
 
   const served = await serveR2File(projectId, normalizedPath, res, {
     injectProjectScript: normalizedPath === '/index.html',
+    slug,
   })
   if (served) return true
 
   if (!hasExtension) {
     const fallbackServed = await serveR2File(projectId, '/index.html', res, {
       injectProjectScript: true,
+      slug,
     })
     return fallbackServed
   }
@@ -167,13 +202,13 @@ const serveProjectDist = async (projectId, reqPath, res) => {
 }
 
 app.use('/assets', async (req, res, next) => {
-  const projectId = await resolveProjectId(req)
-  if (!projectId) return next()
+  const projectInfo = await resolveProject(req)
+  if (!projectInfo) return next()
 
   const assetPath = req.originalUrl.split('?')[0]
 
   try {
-    const served = await serveProjectDist(projectId, assetPath, res)
+    const served = await serveProjectDist(projectInfo.projectId, assetPath, res, projectInfo.slug)
     if (served) return
     return next()
   } catch (error) {
@@ -186,19 +221,19 @@ app.use('/assets', async (req, res, next) => {
 app.use('/p/:slug', async (req, res, next) => {
   try {
     const slug = req.params.slug
-    const projectId = await resolveProjectId({ query: { p: slug } })
-    if (!projectId) {
+    const projectInfo = await resolveProject({ query: { p: slug } })
+    if (!projectInfo) {
       return res.status(404).send('<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>')
     }
 
-    res.cookie('nexforge_project_id', projectId, {
+    res.cookie('nexforge_project_id', projectInfo.projectId, {
       path: '/',
       sameSite: 'Lax',
       secure: process.env.NODE_ENV === 'production',
     })
 
     const projectPath = req.path.replace(`/p/${slug}`, '') || '/'
-    const served = await serveProjectDist(projectId, projectPath, res)
+    const served = await serveProjectDist(projectInfo.projectId, projectPath, res, projectInfo.slug)
     if (served) return
 
     return res.status(404).send('<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>')
@@ -211,11 +246,11 @@ app.use('/p/:slug', async (req, res, next) => {
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/api')) return next()
   if (req.path.startsWith('/p/')) return next()
-  const projectId = await resolveProjectId(req)
-  if (!projectId) return next()
+  const projectInfo = await resolveProject(req)
+  if (!projectInfo) return next()
 
   try {
-    const served = await serveProjectDist(projectId, req.path, res)
+    const served = await serveProjectDist(projectInfo.projectId, req.path, res, projectInfo.slug)
     if (served) return
   } catch (err) {
     console.error('Root project routing error:', err)
