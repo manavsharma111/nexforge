@@ -40,8 +40,8 @@ const FloatingChatbot = () => {
 
     try {
       const result = await dispatch(askAIAsync({ prompt: userMsg })).unwrap()
-      if (result?.response?.text) {
-        setChatHistory(prev => [...prev, { sender: 'ai', text: result.response.text }])
+      if (result?.response) {
+        setChatHistory(prev => [...prev, { sender: 'ai', text: result.response }])
       }
     } catch (error) {
       console.error("AI Chat Error", error)
