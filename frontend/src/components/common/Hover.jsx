@@ -81,7 +81,7 @@ export default function Hover({ children, className = "", fillColor = "#ff007f" 
       wrap.removeEventListener("mouseenter", onEnter)
       wrap.removeEventListener("mouseleave", onLeave)
     }
-  }, [fillColor])
+  }, [isMobile, fillColor])
   if (isMobile) {
     return <div className={`inline-block ${className}`}>{children}</div>
   }
