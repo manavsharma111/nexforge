@@ -232,20 +232,26 @@ const updateProject = async (req, res) => {
         return res.status(400).json({ message: "Subdomain already taken" })
       }
       project.subdomain = formattedSubdomain
+      // Regenerate liveUrl to ensure it's correct and avoid parsing errors
       if (project.liveUrl) {
         try {
-          const url = new URL(project.liveUrl)
-          // Only rewrite host if it refers to the old subdomain (avoid altering path-based liveUrl)
-          if (oldSubdomain && url.hostname.startsWith(oldSubdomain + ".")) {
-            const hostParts = url.host.split(".")
-            if (hostParts.length > 1) {
-              hostParts[0] = formattedSubdomain
-              url.host = hostParts.join(".")
-              project.liveUrl = url.toString()
-            }
+          const baseDomain = process.env.BASE_DOMAIN || "localhost"
+          const isLocal = baseDomain === "localhost"
+          const projectId = project._id.toString()
+
+          if (project.projectType === "STATIC") {
+            // For static sites, the primary live URL is path-based and doesn't change with subdomain on production.
+            project.liveUrl = isLocal
+              ? `http://${formattedSubdomain}.${baseDomain}:8000/p/${projectId}`
+              : `https://${baseDomain}/p/${projectId}`
+          } else {
+            // For NODE projects, the URL is subdomain-based.
+            project.liveUrl = isLocal
+              ? `http://${formattedSubdomain}.${baseDomain}:8000`
+              : `https://${formattedSubdomain}.${baseDomain}`
           }
         } catch (e) {
-          console.error("Failed to parse liveUrl", e)
+          console.error("Failed to regenerate liveUrl during update", e)
         }
       }
     }

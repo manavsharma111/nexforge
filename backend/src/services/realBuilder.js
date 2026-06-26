@@ -572,9 +572,7 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       // NODE/backend → proxy through Railway subdomain
       liveUrl = isLocal
         ? `http://${finalSubdomain}.${baseDomain}:8000`
-        : isRailway
-          ? `http://${finalSubdomain}.${baseDomain}`
-          : `https://${finalSubdomain}.${baseDomain}`
+        : `https://${finalSubdomain}.${baseDomain}`
     }
 
     await updateStatus("LIVE", liveUrl)
