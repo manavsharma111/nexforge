@@ -136,6 +136,12 @@ export default function Docs() {
           </p>
           <CodeSnippet code="nexforge deploy" />
 
+          <h3 id="rename-subdomain" className="text-xl font-medium text-[#FFFFFF] mb-4 mt-12 scroll-mt-8">Rename Subdomain</h3>
+          <p className="text-[#E4E4E7] leading-relaxed">
+            Rename the subdomain of your project.
+          </p>
+          <CodeSnippet code="nexforge rename" />
+
           <h3 id="rollback" className="text-xl font-medium text-[#FFFFFF] mb-4 mt-12 scroll-mt-8">Rollback Version</h3>
           <p className="text-[#E4E4E7] leading-relaxed">
             View your recent deployment history and instantly revert your live website to a previous version without rebuilding.
