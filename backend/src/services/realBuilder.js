@@ -448,6 +448,9 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       )
       await appendLog(`🎉 Build finished successfully.`)
 
+      const outDir = project.outputDirectory || "dist"
+      const builtDistPath = path.join(workingDir, outDir)
+
       // Sanitize any accidentally embedded local file URLs before upload
       try {
         await sanitizeLocalAssetUrls(builtDistPath, workingDir)
@@ -455,11 +458,6 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       } catch (sanitizationError) {
         await appendLog(`⚠️ Build sanitization failed: ${sanitizationError.message}`)
       }
-
-      // Copy ONLY the built dist to the volume (saves volume space)
-      const outDir = project.outputDirectory || "dist"
-      const builtDistPath = path.join(workingDir, outDir)
-      const volumeDistPath = path.join(projectDir, project.rootDirectory || "./", outDir)
 
       // ── Upload dist to Cloudflare R2 ──────────────────────────────────────
       await appendLog(`☁️ Uploading build to Cloudflare R2...`)
