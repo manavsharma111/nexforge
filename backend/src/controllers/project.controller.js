@@ -237,19 +237,12 @@ const updateProject = async (req, res) => {
         try {
           const baseDomain = process.env.BASE_DOMAIN || "localhost"
           const isLocal = baseDomain === "localhost"
-          const projectId = project._id.toString()
-
-          if (project.projectType === "STATIC") {
-            // For static sites, the primary live URL is path-based and doesn't change with subdomain on production.
-            project.liveUrl = isLocal
-              ? `http://${formattedSubdomain}.${baseDomain}:8000/p/${projectId}`
-              : `https://${baseDomain}/p/${projectId}`
-          } else {
-            // For NODE projects, the URL is subdomain-based.
-            project.liveUrl = isLocal
-              ? `http://${formattedSubdomain}.${baseDomain}:8000`
-              : `https://${formattedSubdomain}.${baseDomain}`
-          }
+          // To ensure compatibility with Railway's free tier and avoid SSL/domain provisioning issues,
+          // we will consistently use a path-based URL for the live production link.
+          // The subdomain will still be used for local development and can be used with custom domains.
+          project.liveUrl = isLocal
+            ? `http://${formattedSubdomain}.${baseDomain}:8000` // Local dev can still use subdomains
+            : `https://${baseDomain}/p/${project._id.toString()}` // Production uses path-based
         } catch (e) {
           console.error("Failed to regenerate liveUrl during update", e)
         }

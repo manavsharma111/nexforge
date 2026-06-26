@@ -555,23 +555,14 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     const finalSubdomain = latestProj?.subdomain || projectId.toString()
     const baseDomain = process.env.BASE_DOMAIN || "localhost"
     const isLocal = baseDomain === "localhost"
-    const isRailway = baseDomain.includes("railway.app")
 
     let liveUrl
-    const r2PublicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL
-
-    if (projectType === "STATIC") {
-      // Serve static sites via path-based URL (secure, works on Railway without cert issues)
-      liveUrl = isLocal
-        ? `http://${finalSubdomain}.${baseDomain}:8000/p/${projectId}`
-        : `https://${baseDomain}/p/${projectId}`
-      await appendLog(`✅ Static site served via path-based platform route`)
-    } else {
-      // NODE/backend → proxy through Railway subdomain
-      liveUrl = isLocal
-        ? `http://${finalSubdomain}.${baseDomain}:8000`
-        : `https://${finalSubdomain}.${baseDomain}`
-    }
+    // To ensure compatibility with Railway's free tier and avoid SSL/domain provisioning issues,
+    // we will consistently use a path-based URL for the live production link.
+    liveUrl = isLocal
+      ? `http://${finalSubdomain}.${baseDomain}:8000` // Local dev can still use subdomains
+      : `https://${baseDomain}/p/${projectId}` // Production uses path-based for all project types
+    await appendLog(`✅ Project will be served at path-based URL for stability.`)
 
     await updateStatus("LIVE", liveUrl)
     await appendLog(`🌐 Deployment is live! URL: ${liveUrl}`)
