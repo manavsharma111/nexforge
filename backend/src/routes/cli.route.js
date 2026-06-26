@@ -3,7 +3,7 @@ const router = express.Router()
 const multer = require("multer")
 const path = require("path")
 const fs = require("fs")
-const { handleCliDeploy, handleCliInit, handleCliEnvPush, handleCliEnvPull, handleCliGetDeployments, handleCliRollback } = require("../controllers/cli.controller")
+const { handleCliDeploy, handleCliInit, handleCliEnvPush, handleCliEnvPull, handleCliGetDeployments, handleCliRollback, handleCliRename } = require("../controllers/cli.controller")
 const { requireCliAuth } = require("../middlewares/cliAuthMiddleware")
 
 // We use multer to handle the incoming zip file upload
@@ -40,5 +40,8 @@ router.get("/env/pull/:projectId", requireCliAuth, handleCliEnvPull)
 // Versioning and Rollback
 router.get("/deployments/:projectId", requireCliAuth, handleCliGetDeployments)
 router.post("/rollback/:projectId", requireCliAuth, handleCliRollback)
+
+// Renaming
+router.post("/rename/:projectId", requireCliAuth, handleCliRename)
 
 module.exports = router

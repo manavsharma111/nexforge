@@ -172,11 +172,47 @@ const handleCliRollback = async (req, res) => {
   }
 }
 
+const handleCliRename = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { newSubdomain } = req.body;
+
+    if (!newSubdomain) {
+      return res.status(400).json({ error: "Subdomain is required" });
+    }
+
+    const cleanSubdomain = newSubdomain.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+
+    const existingProject = await Project.findOne({ subdomain: cleanSubdomain, _id: { $ne: projectId } });
+    if (existingProject) {
+      return res.status(400).json({ error: "Subdomain is already taken by another project" });
+    }
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    if (project.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    project.subdomain = cleanSubdomain;
+    await project.save();
+
+    res.status(200).json({ message: "Subdomain updated successfully", projectId });
+  } catch (error) {
+    console.error("Error handling CLI rename:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 module.exports = {
   handleCliDeploy,
   handleCliInit,
   handleCliEnvPush,
   handleCliEnvPull,
   handleCliGetDeployments,
-  handleCliRollback
+  handleCliRollback,
+  handleCliRename
 }

@@ -96,4 +96,18 @@ nexforge rollback
 
 ---
 
+### ✏️ 7. `nexforge rename`
+**Description:** Rename the subdomain of your project.
+**Usage:**
+```bash
+nexforge rename
+```
+**Details:**
+- Asks for your new preferred subdomain.
+- Validates availability on the NexForge servers.
+- Instantly updates your live URL to the new subdomain.
+
+---
+
 ### Built With ❤️ by Manav Sharma
+

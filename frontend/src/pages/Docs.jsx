@@ -53,6 +53,7 @@ export default function Docs() {
     { id: "rollback", label: "Rollback Version", indent: true },
     { id: "env", label: "Environment Sync", indent: true },
     { id: "logs", label: "Stream Logs", indent: true },
+    { id: "rename", label: "Rename Project", indent: true },
   ]
 
   const scrollTo = (id) => {

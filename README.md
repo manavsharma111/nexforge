@@ -67,7 +67,7 @@ The core functionality of NexForge is driven by the backend build service and th
 2. **Job Queuing (BullMQ & Redis)**: The backend securely receives the artifact and pushes a build job onto a Redis-backed queue to prevent server exhaustion during concurrent deployments.
 3. **Execution & Build**: A worker picks up the job, extracts the payload, and uses Node's `child_process` to natively execute the project's dependency installation and build commands.
 4. **Real-time Log Streaming**: Build `stdout` and `stderr` streams are captured and emitted via **Socket.io**, broadcasting real-time logs back to the developer's CLI and the Web Dashboard simultaneously.
-5. **Zero-Downtime Routing**: Upon a successful build, the system updates a `current` symbolic link to the new build directory. An Express-based reverse proxy immediately begins routing incoming traffic (e.g., `app.nexforge.com`) to the new deployment.
+5. **Zero-Downtime Routing**: Upon a successful build, the system uploads the static assets directly to a **Cloudflare R2 Bucket**. An Express-based reverse proxy intercepts incoming traffic (e.g., `app.nexforge.com`) and streams the deployment instantly from Cloudflare's edge, ensuring high availability and zero downtime.
 
 ---
 
@@ -181,6 +181,9 @@ $ nexforge logs
 
 # Instantly rollback to a stable previous version in case of failure
 $ nexforge rollback
+
+# Rename the subdomain of your project
+$ nexforge rename
 ```
 
 ---
