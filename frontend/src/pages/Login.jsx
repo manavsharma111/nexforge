@@ -38,8 +38,8 @@ const Login = () => {
 
  
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6">
-  <div className="flex flex-col lg:flex-row items-center justify-between gap-20">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-24 lg:py-0 mt-8 lg:mt-0">
+        <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-16 lg:gap-20">
 
     {/* ================= Left Side ================= */}
     <motion.section
@@ -55,7 +55,7 @@ const Login = () => {
           <LayoutTemplate className="w-6 h-6 text-indigo-400" />
         </div>
 
-        <h2 className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
           Deploying via Dashboard
         </h2>
       </motion.div>
@@ -122,8 +122,7 @@ const Login = () => {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-  className="w-full max-w-[420px] shrink-0 border border-white/10 rounded-3xl p-6 bg-white/5 backdrop-blur-md"
-
+      className="w-full max-w-[420px] shrink-0 border border-white/10 rounded-3xl p-5 sm:p-6 bg-white/5 backdrop-blur-md"
     >
 
       {/* Logo */}
