@@ -29,7 +29,7 @@ export default function DeploymentDocs() {
         className="flex-1 px-4 md:px-8 pb-32 pt-12 w-full max-w-[900px] relative z-10"
       >
         <motion.div variants={itemVariants} className="mb-12 text-center md:text-left">
-          <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-4">
             Platform Deployment Guide
           </h1>
           <p className="text-lg text-[#A1A1AA] leading-relaxed max-w-2xl mx-auto md:mx-0">
@@ -66,16 +66,16 @@ export default function DeploymentDocs() {
 
         {/* Dashboard Deployment Section */}
         <motion.section variants={itemVariants} className="mb-16">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-              <LayoutTemplate className="w-5 h-5 text-purple-400" />
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+              <LayoutTemplate className="w-6 h-6 text-indigo-400" />
             </div>
-            <h2 className="text-2xl font-semibold text-white tracking-tight">Deploying via Dashboard</h2>
+            <h2 className="text-3xl font-bold text-white tracking-tight">Deploying via Dashboard</h2>
           </div>
           
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-6 top-6 bottom-6 w-px bg-[#6366F1]/50 md:block hidden" />
+            <div className="absolute left-6 top-8 bottom-8 w-px bg-gradient-to-b from-indigo-500/50 via-purple-500/50 to-transparent md:block hidden" />
             
             <div className="space-y-6">
               {[
@@ -84,15 +84,23 @@ export default function DeploymentDocs() {
                 { icon: Settings, title: "Configure Settings", desc: "Set your build commands, output directory, and inject any required environment variables safely" },
                 { icon: Zap, title: "Trigger Build", desc: "Click Deploy and watch the live logs stream directly to your browser as NexForge builds your app" }
               ].map((step, idx) => (
-                <div key={idx} className="flex flex-col md:flex-row gap-6 relative group">
-                  <div className="w-12 h-12 rounded-full bg-[#18181B] border border-[rgba(255,255,255,0.1)] flex items-center justify-center shrink-0 z-10 group-hover:border-[#6366F1] group-hover:bg-[#6366F1]/10 transition-colors mx-auto md:mx-0">
-                    <step.icon className="w-5 h-5 text-gray-400 group-hover:text-[#6366F1] transition-colors" />
+                <motion.div key={idx} variants={itemVariants} className="flex flex-col md:flex-row gap-6 relative group items-start cursor-default">
+                  <div className="relative z-10 mx-auto md:mx-0">
+                    <div className="absolute inset-0 bg-indigo-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="w-12 h-12 rounded-full bg-[#111] border border-white/10 flex items-center justify-center shrink-0 relative z-10 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/10 group-hover:scale-110 transition-all duration-300">
+                      <step.icon className="w-5 h-5 text-gray-500 group-hover:text-indigo-400 transition-colors duration-300" />
+                    </div>
                   </div>
-                  <div className="bg-[#111111]/60 backdrop-blur-sm border border-[rgba(255,255,255,0.04)] p-5 rounded-2xl flex-1 hover:bg-[#111111]/80 transition-colors text-center md:text-left">
-                    <h3 className="text-white font-medium mb-1">Step {idx + 1} - {step.title}</h3>
-                    <p className="text-[#A1A1AA] text-sm">{step.desc}</p>
+                  <div className="bg-white/[0.02] backdrop-blur-md border border-[rgba(255,255,255,0.04)] p-6 rounded-2xl flex-1 transition-all duration-300 group-hover:bg-white/[0.04] group-hover:border-indigo-500/30 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-indigo-500/10 text-center md:text-left">
+                    <h3 className="text-white font-semibold mb-2 flex items-center justify-center md:justify-start gap-3 text-lg">
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-white/10 text-gray-300 group-hover:bg-indigo-500/20 group-hover:text-indigo-300 transition-colors">
+                        Step {idx + 1}
+                      </span>
+                      {step.title}
+                    </h3>
+                    <p className="text-[#A1A1AA] leading-relaxed">{step.desc}</p>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>

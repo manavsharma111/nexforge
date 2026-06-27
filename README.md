@@ -9,7 +9,7 @@
   </p>
 
   <p>
-    <a href="#features"><strong>Explore the docs »</strong></a>
+    <a href="https://nexforge-zeta.vercel.app/">Visit Nexforge</a>
     <br />
     <br />
     <a href="#getting-started">View Demo</a>

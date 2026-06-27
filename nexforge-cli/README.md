@@ -2,6 +2,7 @@
 
 The official Command Line Interface for **NexForge** - Your custom Platform as a Service (PaaS).
 Deploy, manage, and scale your applications directly from your terminal with zero friction!
+  <a href="https://nexforge-zeta.vercel.app/">Visit Nexforge</a>
 
 ## Installation
 
