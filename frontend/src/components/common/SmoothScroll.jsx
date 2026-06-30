@@ -8,17 +8,25 @@ gsap.registerPlugin(ScrollTrigger)
 
 const SmoothScroll = ({ children }) => {
   useEffect(() => {
+    // Prevent browser from restoring scroll position, which conflicts with GSAP and Lenis
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual'
+    }
+    
+    // Force scroll to top on page load/refresh
+    window.scrollTo(0, 0)
+    
     // GSAP Mobile Optimization: Prevents layout thrashing on address bar hide/show
     ScrollTrigger.config({ ignoreMobileResize: true })
     
     // Removing ScrollTrigger.normalizeScroll(true) as it often breaks native scroll wheel and causes jank on desktop
     
     const lenis = new Lenis({
-      lerp: 0.0001, // Lower value = more buttery/smooth, higher = more responsive (default is 0.1)
+      lerp: 0.05, // Lower value = more buttery/smooth, higher = more responsive (default is 0.1)
       wheelMultiplier: 1, 
       smoothWheel: true,
       syncTouch: true,
-      touchMultiplier: 1.2, // Thoda kam kiya taaki touch par ekdam se na bhaage
+      touchMultiplier: 1.5, // Thoda kam kiya taaki touch par ekdam se na bhaage
       smoothTouch: true,
     })
 
