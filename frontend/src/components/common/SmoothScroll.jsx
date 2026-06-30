@@ -14,7 +14,7 @@ const SmoothScroll = ({ children }) => {
     // Removing ScrollTrigger.normalizeScroll(true) as it often breaks native scroll wheel and causes jank on desktop
     
     const lenis = new Lenis({
-      lerp: 0.03, // Lower value = more buttery/smooth, higher = more responsive (default is 0.1)
+      lerp: 0.0001, // Lower value = more buttery/smooth, higher = more responsive (default is 0.1)
       wheelMultiplier: 1, 
       smoothWheel: true,
       syncTouch: true,
