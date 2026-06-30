@@ -19,6 +19,7 @@ const SmoothScroll = ({ children }) => {
       smoothWheel: true,
       syncTouch: true,
       touchMultiplier: 1.5,
+      smoothTouch: true,
     })
 
     // Make lenis globally available to allow modals to pause it
