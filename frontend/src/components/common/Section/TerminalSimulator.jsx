@@ -39,20 +39,23 @@ export default function TerminalSimulator() {
 
     if (currentCharIndex < currentLine.text.length) {
       // Still typing current line
-      const timer = setTimeout(() => {
-        setDisplayedLines((prev) => {
-          const newLines = [...prev]
-          if (newLines.length <= currentLineIndex) {
-            newLines.push({ text: "", type: currentLine.type })
-          }
-          newLines[currentLineIndex] = {
-            ...newLines[currentLineIndex],
-            text: currentLine.text.slice(0, currentCharIndex + 1),
-          }
-          return newLines
-        })
-        setCurrentCharIndex((prev) => prev + 1)
-      }, currentLine.type === "command" ? CHAR_DELAY : CHAR_DELAY * 0.6)
+      const timer = setTimeout(
+        () => {
+          setDisplayedLines((prev) => {
+            const newLines = [...prev]
+            if (newLines.length <= currentLineIndex) {
+              newLines.push({ text: "", type: currentLine.type })
+            }
+            newLines[currentLineIndex] = {
+              ...newLines[currentLineIndex],
+              text: currentLine.text.slice(0, currentCharIndex + 1),
+            }
+            return newLines
+          })
+          setCurrentCharIndex((prev) => prev + 1)
+        },
+        currentLine.type === "command" ? CHAR_DELAY : CHAR_DELAY * 0.6,
+      )
       return () => clearTimeout(timer)
     } else {
       // Line finished, move to next
@@ -66,10 +69,14 @@ export default function TerminalSimulator() {
 
   const getLineColor = (type) => {
     switch (type) {
-      case "command": return "text-white font-semibold"
-      case "success": return "text-emerald-400 font-semibold"
-      case "url": return "text-purple-400"
-      default: return "text-[#A1A1AA]"
+      case "command":
+        return "text-white font-semibold"
+      case "success":
+        return "text-emerald-400 font-semibold"
+      case "url":
+        return "text-purple-400"
+      default:
+        return "text-[#A1A1AA]"
     }
   }
 
@@ -80,7 +87,9 @@ export default function TerminalSimulator() {
         <div className="w-3 h-3 rounded-full bg-[#EF4444]/80"></div>
         <div className="w-3 h-3 rounded-full bg-[#EAB308]/80"></div>
         <div className="w-3 h-3 rounded-full bg-[#22C55E]/80"></div>
-        <span className="ml-3 text-xs text-[#555] font-mono">nexforge — zsh</span>
+        <span className="ml-3 text-xs text-[#555] font-mono">
+          nexforge — zsh
+        </span>
       </div>
 
       {/* Terminal Body */}

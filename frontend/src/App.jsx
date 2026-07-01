@@ -30,7 +30,10 @@ const App = () => {
   }, [dispatch])
 
   const isPublicLayout =
-    location.pathname === "/" || location.pathname === "/login" || location.pathname.startsWith("/auth") || location.pathname === "/home"
+    location.pathname === "/" ||
+    location.pathname === "/login" ||
+    location.pathname.startsWith("/auth") ||
+    location.pathname === "/home"
 
   // Define transition variants
   const pageVariants = {
@@ -68,9 +71,7 @@ const App = () => {
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="flex h-screen bg-[#09090B] text-[#FFFFFF] font-sans selection:bg-[#6366F1]/30 selection:text-white overflow-hidden"
         >
-          <div className="hidden md:flex">
-            {isAuthenticated && <Sidebar />}
-          </div>
+          <div className="hidden md:flex">{isAuthenticated && <Sidebar />}</div>
           {isAuthenticated && <MobileNav />}
 
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -83,7 +84,10 @@ const App = () => {
                     <Route path="/new" element={<ImportProject />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/docs" element={<Docs />} />
-                    <Route path="/deployment-docs" element={<DeploymentDocs />} />
+                    <Route
+                      path="/deployment-docs"
+                      element={<DeploymentDocs />}
+                    />
                     <Route path="/project/:id" element={<ProjectDetails />} />
                   </Route>
                 </Routes>

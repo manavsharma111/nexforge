@@ -20,7 +20,10 @@ const getAllFiles = (dir, baseDir = dir) => {
     if (entry.isDirectory()) {
       files.push(...getAllFiles(fullPath, baseDir))
     } else {
-      files.push({ fullPath, relativePath: path.relative(baseDir, fullPath).replace(/\\/g, "/") })
+      files.push({
+        fullPath,
+        relativePath: path.relative(baseDir, fullPath).replace(/\\/g, "/"),
+      })
     }
   }
   return files
@@ -33,36 +36,44 @@ const findAssetByFilename = (rootDir, fileName) => {
 
 const sanitizeLocalAssetUrls = async (builtDistPath, sourceDir) => {
   const assetFiles = getAllFiles(builtDistPath)
-  const replacerRegex = /url\((['"]?)(?:file:\/\/\/)?([A-Za-z]:[\\\\/][^"')]+)\1\)/g
+  const replacerRegex =
+    /url\((['"]?)(?:file:\/\/\/)?([A-Za-z]:[\\\\/][^"')]+)\1\)/g
 
   for (const file of assetFiles) {
     const ext = path.extname(file.fullPath).toLowerCase()
     if (![".css", ".html", ".js", ".svg"].includes(ext)) continue
 
     let content = await fs.promises.readFile(file.fullPath, "utf8")
-    let updated = content.replace(replacerRegex, (match, quote, windowsPath) => {
-      const filename = path.basename(windowsPath)
-      let candidate = findAssetByFilename(builtDistPath, filename)
+    let updated = content.replace(
+      replacerRegex,
+      (match, quote, windowsPath) => {
+        const filename = path.basename(windowsPath)
+        let candidate = findAssetByFilename(builtDistPath, filename)
 
-      if (!candidate) {
-        const sourceCandidate = findAssetByFilename(sourceDir, filename)
-        if (sourceCandidate) {
-          const targetFolder = path.join(builtDistPath, "fonts")
-          fs.mkdirSync(targetFolder, { recursive: true })
-          const targetPath = path.join(targetFolder, filename)
-          if (!fs.existsSync(targetPath)) {
-            fs.copyFileSync(sourceCandidate.fullPath, targetPath)
+        if (!candidate) {
+          const sourceCandidate = findAssetByFilename(sourceDir, filename)
+          if (sourceCandidate) {
+            const targetFolder = path.join(builtDistPath, "fonts")
+            fs.mkdirSync(targetFolder, { recursive: true })
+            const targetPath = path.join(targetFolder, filename)
+            if (!fs.existsSync(targetPath)) {
+              fs.copyFileSync(sourceCandidate.fullPath, targetPath)
+            }
+            candidate = { fullPath: targetPath }
           }
-          candidate = { fullPath: targetPath }
         }
-      }
 
-      if (!candidate) return match
+        if (!candidate) return match
 
-      const relative = path.relative(path.dirname(file.fullPath), candidate.fullPath).replace(/\\/g, "/")
-      const safeRelative = relative.startsWith(".") ? relative : `./${relative}`
-      return `url("${safeRelative}")`
-    })
+        const relative = path
+          .relative(path.dirname(file.fullPath), candidate.fullPath)
+          .replace(/\\/g, "/")
+        const safeRelative = relative.startsWith(".")
+          ? relative
+          : `./${relative}`
+        return `url("${safeRelative}")`
+      },
+    )
 
     if (updated !== content) {
       await fs.promises.writeFile(file.fullPath, updated, "utf8")
@@ -114,7 +125,11 @@ const executeCommand = (cmd, args, cwd, appendLog, customEnv = {}) => {
   })
 }
 
-const triggerDeploymentPipeline = async (projectId, branch = "main", options = {}) => {
+const triggerDeploymentPipeline = async (
+  projectId,
+  branch = "main",
+  options = {},
+) => {
   try {
     const project = await Project.findById(projectId).populate("owner")
     if (!project) return console.log("Project not found!")
@@ -194,7 +209,7 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     if (!fs.existsSync(baseProjectDir)) {
       fs.mkdirSync(baseProjectDir, { recursive: true })
     }
-    
+
     // Each deployment gets its own R2 prefix: {projectId}/{deploymentId}/
     const deploymentId = deployment._id.toString()
     const r2ProjectPrefix = projectId.toString()
@@ -218,7 +233,7 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
 
     const cacheDir = path.join(baseProjectDir, "_cache")
     const currentSymlink = path.join(baseProjectDir, "current")
-    
+
     // Back up node_modules from the PREVIOUS current deployment (if it exists)
     let oldNodeModules = null
     if (fs.existsSync(currentSymlink)) {
@@ -233,7 +248,9 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     }
 
     if (oldNodeModules && fs.existsSync(oldNodeModules)) {
-      await appendLog(`📦 Backing up node_modules to cache from previous version...`)
+      await appendLog(
+        `📦 Backing up node_modules to cache from previous version...`,
+      )
       try {
         if (!fs.existsSync(cacheDir))
           fs.mkdirSync(cacheDir, { recursive: true })
@@ -244,12 +261,18 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
             force: true,
           })
         // Copy instead of rename because we want to keep the old version intact for fast rollbacks!
-        await fs.promises.cp(oldNodeModules, cacheNodeModules, { recursive: true })
+        await fs.promises.cp(oldNodeModules, cacheNodeModules, {
+          recursive: true,
+        })
       } catch (e) {}
     }
 
     await updateStatus("INSTALLING")
-    await appendLog("🚀 Deployment pipeline started (New Version: " + deployment._id.toString() + ")")
+    await appendLog(
+      "🚀 Deployment pipeline started (New Version: " +
+        deployment._id.toString() +
+        ")",
+    )
 
     // Prepare Environment Variables map
     const customEnv = {
@@ -267,12 +290,12 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     if (options.source === "cli" && options.zipPath) {
       // CLI deployment: Extract the uploaded zip file instead of cloning
       await appendLog(`📦 Extracting uploaded CLI build...`)
-      
+
       // Ensure the project directory exists before extracting
       if (!fs.existsSync(projectDir)) {
         fs.mkdirSync(projectDir, { recursive: true })
       }
-      
+
       try {
         await extractZip(options.zipPath, { dir: projectDir })
         await appendLog(`✅ Extraction complete.`)
@@ -285,40 +308,63 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       await appendLog(`📥 Downloading repository: ${project.githubRepoUrl}...`)
 
       const repoMatch = project.githubRepoUrl.match(
-        /github\.com\/([^\/]+)\/([^\/]+?)(?:\.git)?(?:\/)?$/
+        /github\.com\/([^\/]+)\/([^\/]+?)(?:\.git)?(?:\/)?$/,
       )
-      if (!repoMatch) throw new Error(`Invalid GitHub URL: ${project.githubRepoUrl}`)
+      if (!repoMatch)
+        throw new Error(`Invalid GitHub URL: ${project.githubRepoUrl}`)
 
       const [, repoOwner, repoName] = repoMatch
       const altBranch = branch === "main" ? "master" : "main"
 
-      await appendLog(`🔗 Repo: ${repoOwner}/${repoName} | Branch: ${branch} | Token: ${token ? "✅ present" : "❌ missing"}`)
+      await appendLog(
+        `🔗 Repo: ${repoOwner}/${repoName} | Branch: ${branch} | Token: ${token ? "✅ present" : "❌ missing"}`,
+      )
 
       // Try downloading with multiple fallback strategies
       const tryDownload = async (branchName, useToken) => {
         const url = `https://api.github.com/repos/${repoOwner}/${repoName}/zipball/${branchName}`
         const hdrs = { "User-Agent": "NexForge-Platform" }
         if (useToken && token) hdrs["Authorization"] = `Bearer ${token}`
-        const res = await axios({ method: "get", url, responseType: "arraybuffer", headers: hdrs, maxRedirects: 10, timeout: 60000 })
+        const res = await axios({
+          method: "get",
+          url,
+          responseType: "arraybuffer",
+          headers: hdrs,
+          maxRedirects: 10,
+          timeout: 60000,
+        })
         return { data: res.data, branch: branchName }
       }
 
       let zipData
       const strategies = [
-        { branchName: branch,    useToken: true,  label: `${branch} (with token)` },
-        { branchName: branch,    useToken: false, label: `${branch} (public)` },
-        { branchName: altBranch, useToken: true,  label: `${altBranch} (with token)` },
-        { branchName: altBranch, useToken: false, label: `${altBranch} (public)` },
+        { branchName: branch, useToken: true, label: `${branch} (with token)` },
+        { branchName: branch, useToken: false, label: `${branch} (public)` },
+        {
+          branchName: altBranch,
+          useToken: true,
+          label: `${altBranch} (with token)`,
+        },
+        {
+          branchName: altBranch,
+          useToken: false,
+          label: `${altBranch} (public)`,
+        },
       ]
 
       let succeeded = false
       for (const strategy of strategies) {
         try {
-          const result = await tryDownload(strategy.branchName, strategy.useToken)
+          const result = await tryDownload(
+            strategy.branchName,
+            strategy.useToken,
+          )
           zipData = result.data
           // Update branch if we fell back to alt
           if (result.branch !== branch) {
-            await appendLog(`✅ Downloaded using branch: ${result.branch} (auto-detected)`)
+            await appendLog(
+              `✅ Downloaded using branch: ${result.branch} (auto-detected)`,
+            )
             branch = result.branch
           } else {
             await appendLog(`✅ Download complete.`)
@@ -327,15 +373,18 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
           break
         } catch (e) {
           const s = e.response ? e.response.status : "network error"
-          await appendLog(`⚠️ Strategy "${strategy.label}" failed (${s}), trying next...`, "error")
+          await appendLog(
+            `⚠️ Strategy "${strategy.label}" failed (${s}), trying next...`,
+            "error",
+          )
         }
       }
 
       if (!succeeded) {
         throw new Error(
           `Failed to download repository after all attempts. ` +
-          `Repo: ${repoOwner}/${repoName}. ` +
-          `Please verify the repo exists and reconnect GitHub in Settings (token may be expired).`
+            `Repo: ${repoOwner}/${repoName}. ` +
+            `Please verify the repo exists and reconnect GitHub in Settings (token may be expired).`,
         )
       }
 
@@ -352,7 +401,8 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
 
       // GitHub zipball wraps content in a root folder: {owner}-{repo}-{sha}/
       const innerFolders = fs.readdirSync(tmpExtractPath)
-      if (innerFolders.length === 0) throw new Error("Downloaded archive is empty")
+      if (innerFolders.length === 0)
+        throw new Error("Downloaded archive is empty")
 
       const innerPath = path.join(tmpExtractPath, innerFolders[0])
       fs.mkdirSync(tmpSrcDir, { recursive: true })
@@ -363,14 +413,21 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       }
 
       // Cleanup zip and extract temp
-      try { fs.rmSync(tmpZipPath) } catch (e) {}
-      try { fs.rmSync(tmpExtractPath, { recursive: true, force: true }) } catch (e) {}
+      try {
+        fs.rmSync(tmpZipPath)
+      } catch (e) {}
+      try {
+        fs.rmSync(tmpExtractPath, { recursive: true, force: true })
+      } catch (e) {}
 
       await appendLog(`✅ Repository extracted to /tmp.`)
 
       // Point projectDir to tmpSrcDir for the build phase
       // After build, we'll copy only what's needed to the volume
-      Object.defineProperty(this, '_tmpSrcDir', { value: tmpSrcDir, writable: true })
+      Object.defineProperty(this, "_tmpSrcDir", {
+        value: tmpSrcDir,
+        writable: true,
+      })
       // Store tmpSrcDir reference via a local variable for use below
       // eslint-disable-next-line no-var
       var resolvedSrcDir = tmpSrcDir
@@ -378,19 +435,25 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
 
     // 📁 Determine Working Directory
     // For GitHub deploys: work in /tmp src dir; for CLI: work in volume projectDir
-    const effectiveSrcDir = (typeof resolvedSrcDir !== 'undefined') ? resolvedSrcDir : projectDir
+    const effectiveSrcDir =
+      typeof resolvedSrcDir !== "undefined" ? resolvedSrcDir : projectDir
     let workingDir = path.join(effectiveSrcDir, project.rootDirectory || "./")
-    
+
     // Auto-correct working directory for CLI deployments
-    if (options.source === "cli" && !fs.existsSync(path.join(workingDir, "package.json"))) {
+    if (
+      options.source === "cli" &&
+      !fs.existsSync(path.join(workingDir, "package.json"))
+    ) {
       if (fs.existsSync(path.join(effectiveSrcDir, "package.json"))) {
         workingDir = effectiveSrcDir
-        await appendLog(`📂 CLI Deployment: Auto-corrected Working Directory to root (found package.json)`)
+        await appendLog(
+          `📂 CLI Deployment: Auto-corrected Working Directory to root (found package.json)`,
+        )
       }
     }
-    
+
     await appendLog(
-      `📂 Using Working Directory: ${workingDir === projectDir ? "./" : (project.rootDirectory || "./")}`,
+      `📂 Using Working Directory: ${workingDir === projectDir ? "./" : project.rootDirectory || "./"}`,
     )
 
     const cacheNodeModules = path.join(cacheDir, "node_modules")
@@ -456,7 +519,9 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
         await sanitizeLocalAssetUrls(builtDistPath, workingDir)
         await appendLog(`🔧 Sanitized local file URLs in build output.`)
       } catch (sanitizationError) {
-        await appendLog(`⚠️ Build sanitization failed: ${sanitizationError.message}`)
+        await appendLog(
+          `⚠️ Build sanitization failed: ${sanitizationError.message}`,
+        )
       }
 
       // ── Upload dist to Cloudflare R2 ──────────────────────────────────────
@@ -464,27 +529,38 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       const r2DistPrefix = `${r2DeploymentPrefix}/dist`
 
       // Delete old 'current' R2 prefix and upload new one
-      try { await deletePrefix(`${r2ProjectPrefix}/current`) } catch(e) {}
+      try {
+        await deletePrefix(`${r2ProjectPrefix}/current`)
+      } catch (e) {}
 
       let uploadedCount = 0
       const totalFiles = await uploadDirectory(
         builtDistPath,
         r2DistPrefix,
-        (done, total) => { uploadedCount = done }
+        (done, total) => {
+          uploadedCount = done
+        },
       )
-      await appendLog(`✅ Uploaded ${totalFiles} files to R2 at: ${r2DistPrefix}`)
+      await appendLog(
+        `✅ Uploaded ${totalFiles} files to R2 at: ${r2DistPrefix}`,
+      )
 
       // Also write a 'current' pointer prefix (copy references) by uploading to current prefix
       await uploadDirectory(builtDistPath, `${r2ProjectPrefix}/current/dist`)
       await appendLog(`🔗 Updated 'current' pointer in R2.`)
 
       // Clean up local temp dirs
-      try { await fs.promises.rm(builtDistPath, { recursive: true, force: true }) } catch(e) {}
-      if (typeof resolvedSrcDir !== 'undefined') {
-        try { await fs.promises.rm(resolvedSrcDir, { recursive: true, force: true }) } catch(e) {}
+      try {
+        await fs.promises.rm(builtDistPath, { recursive: true, force: true })
+      } catch (e) {}
+      if (typeof resolvedSrcDir !== "undefined") {
+        try {
+          await fs.promises.rm(resolvedSrcDir, { recursive: true, force: true })
+        } catch (e) {}
       }
-      try { await fs.promises.rm(projectDir, { recursive: true, force: true }) } catch(e) {}
-
+      try {
+        await fs.promises.rm(projectDir, { recursive: true, force: true })
+      } catch (e) {}
     } else if (projectType === "NODE") {
       await appendLog(`🚀 Node/Next.js Backend Detected! Starting via PM2...`)
 
@@ -508,31 +584,43 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
       } catch (e) {}
 
       // ── Upload app to R2 ─────────────────────────────────────────────────
-      const appSrcDir = typeof resolvedSrcDir !== 'undefined' ? resolvedSrcDir : projectDir
+      const appSrcDir =
+        typeof resolvedSrcDir !== "undefined" ? resolvedSrcDir : projectDir
       await appendLog(`☁️ Uploading app to Cloudflare R2...`)
       const r2AppPrefix = `${r2DeploymentPrefix}/app`
       await uploadDirectory(appSrcDir, r2AppPrefix)
       await appendLog(`✅ App uploaded to R2.`)
 
       // Update 'current' pointer in R2
-      try { await deletePrefix(`${r2ProjectPrefix}/current`) } catch(e) {}
+      try {
+        await deletePrefix(`${r2ProjectPrefix}/current`)
+      } catch (e) {}
       await uploadDirectory(appSrcDir, `${r2ProjectPrefix}/current/app`)
 
       // ── Prepare persistent directory for PM2 runtime ─────────────────────
       // If the build happened in /tmp, we must copy the final app to the persistent volume
       // so PM2 can run it and it survives restarts.
-      if (typeof resolvedSrcDir !== 'undefined' && resolvedSrcDir !== projectDir) {
-        await appendLog(`💾 Copying app from temporary build directory to persistent storage...`)
+      if (
+        typeof resolvedSrcDir !== "undefined" &&
+        resolvedSrcDir !== projectDir
+      ) {
+        await appendLog(
+          `💾 Copying app from temporary build directory to persistent storage...`,
+        )
         if (fs.existsSync(projectDir)) {
           await fs.promises.rm(projectDir, { recursive: true, force: true })
         }
         await fs.promises.cp(resolvedSrcDir, projectDir, { recursive: true })
         await appendLog(`✅ App copied to: ${projectDir}`)
         // Now we can clean up the temp build directory
-        try { await fs.promises.rm(resolvedSrcDir, { recursive: true, force: true }) } catch(e) {}
+        try {
+          await fs.promises.rm(resolvedSrcDir, { recursive: true, force: true })
+        } catch (e) {}
       }
 
-      await appendLog(`📥 Using persistent app source for runtime at ${projectDir}`)
+      await appendLog(
+        `📥 Using persistent app source for runtime at ${projectDir}`,
+      )
 
       const portfinder = require("portfinder")
       portfinder.basePort = 3001
@@ -574,7 +662,9 @@ const triggerDeploymentPipeline = async (projectId, branch = "main", options = {
     liveUrl = isLocal
       ? `http://${finalSubdomain}.${baseDomain}:8000` // Local dev can still use subdomains
       : `https://${baseDomain}/p/${finalSubdomain}` // Production uses path-based for all project types
-    await appendLog(`✅ Project will be served at path-based URL for stability.`)
+    await appendLog(
+      `✅ Project will be served at path-based URL for stability.`,
+    )
 
     await updateStatus("LIVE", liveUrl)
     await appendLog(`🌐 Deployment is live! URL: ${liveUrl}`)

@@ -36,7 +36,7 @@ const uploadFile = async (localFilePath, r2Key) => {
       Body: fileStream,
       ContentLength: stat.size,
       ContentType: contentType,
-    })
+    }),
   )
 }
 
@@ -50,7 +50,9 @@ const uploadDirectory = async (localDirPath, r2Prefix, onProgress = null) => {
       if (entry.isDirectory()) {
         files.push(...getAllFiles(fullPath, baseDir))
       } else {
-        const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, "/")
+        const relativePath = path
+          .relative(baseDir, fullPath)
+          .replace(/\\/g, "/")
         files.push({ fullPath, relativePath })
       }
     }
@@ -70,7 +72,7 @@ const uploadDirectory = async (localDirPath, r2Prefix, onProgress = null) => {
         await uploadFile(fullPath, r2Key)
         uploaded++
         if (onProgress) onProgress(uploaded, files.length)
-      })
+      }),
     )
   }
 
@@ -80,7 +82,7 @@ const uploadDirectory = async (localDirPath, r2Prefix, onProgress = null) => {
 // ─── Download a single file from R2 ──────────────────────────────────────────
 const downloadFile = async (r2Key, localFilePath) => {
   const response = await r2Client.send(
-    new GetObjectCommand({ Bucket: BUCKET, Key: r2Key })
+    new GetObjectCommand({ Bucket: BUCKET, Key: r2Key }),
   )
 
   fs.mkdirSync(path.dirname(localFilePath), { recursive: true })
@@ -105,7 +107,7 @@ const downloadDirectory = async (r2Prefix, localDirPath, onProgress = null) => {
         Bucket: BUCKET,
         Prefix: r2Prefix + "/",
         ContinuationToken: continuationToken,
-      })
+      }),
     )
     if (res.Contents) objects.push(...res.Contents)
     continuationToken = res.IsTruncated ? res.NextContinuationToken : undefined
@@ -123,7 +125,7 @@ const downloadDirectory = async (r2Prefix, localDirPath, onProgress = null) => {
         await downloadFile(obj.Key, localFilePath)
         downloaded++
         if (onProgress) onProgress(downloaded, objects.length)
-      })
+      }),
     )
   }
 
@@ -141,7 +143,7 @@ const deletePrefix = async (r2Prefix) => {
         Bucket: BUCKET,
         Prefix: r2Prefix + "/",
         ContinuationToken: continuationToken,
-      })
+      }),
     )
 
     const objects = listRes.Contents || []
@@ -150,12 +152,14 @@ const deletePrefix = async (r2Prefix) => {
         new DeleteObjectsCommand({
           Bucket: BUCKET,
           Delete: { Objects: objects.map((o) => ({ Key: o.Key })) },
-        })
+        }),
       )
       totalDeleted += objects.length
     }
 
-    continuationToken = listRes.IsTruncated ? listRes.NextContinuationToken : undefined
+    continuationToken = listRes.IsTruncated
+      ? listRes.NextContinuationToken
+      : undefined
   } while (continuationToken)
 
   return totalDeleted
@@ -169,7 +173,7 @@ const prefixExists = async (r2Prefix) => {
         Bucket: BUCKET,
         Prefix: r2Prefix + "/",
         MaxKeys: 1,
-      })
+      }),
     )
     return (res.Contents && res.Contents.length > 0) || false
   } catch {
@@ -180,11 +184,12 @@ const prefixExists = async (r2Prefix) => {
 // ─── Stream a single file directly to HTTP response ──────────────────────────
 const streamFileToResponse = async (r2Key, res, contentType = null) => {
   const response = await r2Client.send(
-    new GetObjectCommand({ Bucket: BUCKET, Key: r2Key })
+    new GetObjectCommand({ Bucket: BUCKET, Key: r2Key }),
   )
 
   if (contentType) res.setHeader("Content-Type", contentType)
-  if (response.ContentLength) res.setHeader("Content-Length", response.ContentLength)
+  if (response.ContentLength)
+    res.setHeader("Content-Length", response.ContentLength)
   if (response.ETag) res.setHeader("ETag", response.ETag)
   res.setHeader("Cache-Control", "public, max-age=31536000")
 

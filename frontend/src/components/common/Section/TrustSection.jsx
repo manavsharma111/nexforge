@@ -98,7 +98,6 @@
 //   )
 // }
 
-
 import React, { useRef, useLayoutEffect, useState, useEffect } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -108,16 +107,17 @@ gsap.registerPlugin(ScrollTrigger)
 const STATS = [
   { label: "Deployments", target: 12847, suffix: "+", color: "#A855F7" },
   { label: "Uptime", target: 99.9, suffix: "%", decimals: 1, color: "#22C55E" },
-  { label: "Avg Deploy Time", target: 1.2, suffix: "s", decimals: 1, color: "#3B82F6" },
+  {
+    label: "Avg Deploy Time",
+    target: 1.2,
+    suffix: "s",
+    decimals: 1,
+    color: "#3B82F6",
+  },
   { label: "Projects Hosted", target: 3420, suffix: "+", color: "#EAB308" },
 ]
 
-function AnimatedCounter({
-  target,
-  suffix = "",
-  decimals = 0,
-  isVisible,
-}) {
+function AnimatedCounter({ target, suffix = "", decimals = 0, isVisible }) {
   const [value, setValue] = useState(0)
 
   useEffect(() => {
@@ -145,9 +145,7 @@ function AnimatedCounter({
   }, [isVisible, target])
 
   const displayValue =
-    decimals > 0
-      ? value.toFixed(decimals)
-      : Math.round(value).toLocaleString()
+    decimals > 0 ? value.toFixed(decimals) : Math.round(value).toLocaleString()
 
   return (
     <span>

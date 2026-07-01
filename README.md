@@ -1,8 +1,9 @@
 <div align="center">
   <img src="./frontend/public/NexForge.png" alt="NexForge Logo" width="150" />
-  
-  # NexForge 
-  **Advanced Cloud Deployment Platform**
+
+# NexForge
+
+**Advanced Cloud Deployment Platform**
 
   <p>
     A robust, self-hosted Platform as a Service (PaaS) to seamlessly host, manage, and instantly rollback modern web applications with zero downtime.
@@ -18,15 +19,15 @@
     ·
     <a href="https://github.com/manavsharma111/nexforge/issues">Request Feature</a>
   </p>
-  
-  ### Built With
-  
-  ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-  ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
-  ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
-  ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
-  ![Socket.io](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
-  ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+
+### Built With
+
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+![Socket.io](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 </div>
 
 ---
@@ -86,26 +87,29 @@ The core functionality of NexForge is driven by the backend build service and th
 ## 🛠️ Technology Stack
 
 ### Frontend (Dashboard)
-* **Framework**: React.js (Vite)
-* **Styling & UI**: Tailwind CSS, Framer Motion, GSAP, `clsx`, `tailwind-merge`
-* **Icons & Visuals**: Lucide React, Heroicons
-* **Data Visualization**: Recharts
-* **Real-time**: Socket.io-client
+
+- **Framework**: React.js (Vite)
+- **Styling & UI**: Tailwind CSS, Framer Motion, GSAP, `clsx`, `tailwind-merge`
+- **Icons & Visuals**: Lucide React, Heroicons
+- **Data Visualization**: Recharts
+- **Real-time**: Socket.io-client
 
 ### Backend (Core Server & Router)
-* **Runtime**: Node.js & Express.js
-* **Database**: MongoDB (Mongoose)
-* **Queue & Cache**: Redis, BullMQ
-* **WebSockets**: Socket.io
-* **Process Management**: PM2, Child Process API
-* **Security & Utility**: JWT, Express-Rate-Limit, HTTP-Proxy-Middleware, Multer
-* **AI Integrations**: OpenAI, Groq SDK
+
+- **Runtime**: Node.js & Express.js
+- **Database**: MongoDB (Mongoose)
+- **Queue & Cache**: Redis, BullMQ
+- **WebSockets**: Socket.io
+- **Process Management**: PM2, Child Process API
+- **Security & Utility**: JWT, Express-Rate-Limit, HTTP-Proxy-Middleware, Multer
+- **AI Integrations**: OpenAI, Groq SDK
 
 ### Command Line Interface (`nexforge-cli`)
-* **Core Tooling**: Commander.js
-* **Compression**: Archiver
-* **Network**: Axios, Form-Data
-* **Terminal UI**: Chalk, Ora
+
+- **Core Tooling**: Commander.js
+- **Compression**: Archiver
+- **Network**: Axios, Form-Data
+- **Terminal UI**: Chalk, Ora
 
 ---
 
@@ -115,19 +119,21 @@ Follow these instructions to set up NexForge locally.
 
 ### Prerequisites
 
-* **Node.js** (v18.0.0 or higher)
-* **MongoDB** (Local instance or MongoDB Atlas URI)
-* **Redis** (Required for BullMQ task processing)
+- **Node.js** (v18.0.0 or higher)
+- **MongoDB** (Local instance or MongoDB Atlas URI)
+- **Redis** (Required for BullMQ task processing)
 
 ### Installation
 
 **1. Clone the Repository**
+
 ```bash
 git clone https://github.com/manavsharma111/nexforge.git
 cd nexforge
 ```
 
 **2. Backend Setup**
+
 ```bash
 cd backend
 npm install
@@ -140,6 +146,7 @@ npm run dev
 ```
 
 **3. Frontend Setup**
+
 ```bash
 cd ../frontend
 npm install
@@ -152,6 +159,7 @@ npm run dev
 ```
 
 **4. CLI Setup (Optional but Recommended)**
+
 ```bash
 cd ../nexforge-cli
 npm install

@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom"
 import axios from "../utils/axiosInstance"
 import { Copy, Check, UserLock } from "lucide-react"
 import { GiToken } from "react-icons/gi"
-    
+
 export default function Settings() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -76,18 +76,17 @@ export default function Settings() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-1 space-y-1">
-          <button 
+          <button
             onClick={() => setActiveTab("general")}
             className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "general" ? "bg-[#18181B] text-[#FFFFFF]" : "text-[#A1A1AA] hover:text-[#FFFFFF] hover:bg-[#18181B]/50"}`}
           >
             <User size={16} /> General
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab("security")}
             className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "security" ? "bg-[#18181B] text-[#FFFFFF]" : "text-[#A1A1AA] hover:text-[#FFFFFF] hover:bg-[#18181B]/50"}`}
           >
             <GiToken size={16} /> CLI Tokens
-            
           </button>
         </div>
 
@@ -172,7 +171,8 @@ export default function Settings() {
                     CLI Authentication
                   </h3>
                   <p className="text-sm text-[#A1A1AA] mt-1">
-                    Use this token to authenticate the NexForge CLI on your machine.
+                    Use this token to authenticate the NexForge CLI on your
+                    machine.
                   </p>
                 </div>
                 <Button onClick={handleGenerateToken} disabled={isGenerating}>
@@ -190,7 +190,11 @@ export default function Settings() {
                       onClick={handleCopy}
                       className="flex items-center gap-1.5 text-xs text-[#A1A1AA] hover:text-[#FFFFFF] transition-colors"
                     >
-                      {copied ? <Check size={14} className="text-[#10B981]" /> : <Copy size={14} />}
+                      {copied ? (
+                        <Check size={14} className="text-[#10B981]" />
+                      ) : (
+                        <Copy size={14} />
+                      )}
                       {copied ? "Copied" : "Copy"}
                     </button>
                   </div>
@@ -198,7 +202,8 @@ export default function Settings() {
                     {cliToken}
                   </div>
                   <p className="text-xs text-[#EF4444] mt-3">
-                    Keep this token secret. Anyone with this token can deploy to your projects.
+                    Keep this token secret. Anyone with this token can deploy to
+                    your projects.
                   </p>
                 </div>
               ) : (

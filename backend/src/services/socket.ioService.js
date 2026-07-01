@@ -11,10 +11,7 @@ const initSocket = (server) => {
   ].filter(Boolean)
 
   // Pattern-based: allow any *.vercel.app or *.railway.app (your own deployments)
-  const allowedPatterns = [
-    /\.vercel\.app$/,
-    /\.railway\.app$/,
-  ]
+  const allowedPatterns = [/\.vercel\.app$/, /\.railway\.app$/]
 
   io = new Server(server, {
     cors: {

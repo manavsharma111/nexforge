@@ -35,36 +35,56 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
 }
 
 /* Custom Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: hsl(var(--muted)); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
 
 /* Terminal Styles */
 .log-console {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 13px;
   line-height: 1.6;
 }
 .cursor-blink::after {
-  content: '▋';
+  content: "▋";
   animation: blink 1s step-end infinite;
   color: #a855f7;
 }
 
 /* Status Colors */
-.status-live { color: #22c55e; }
-.status-failed { color: #ef4444; }
-.status-building { color: #f59e0b; }
-.status-queued { color: #6366f1; }
-.status-idle { color: #a1a1aa; }
+.status-live {
+  color: #22c55e;
+}
+.status-failed {
+  color: #ef4444;
+}
+.status-building {
+  color: #f59e0b;
+}
+.status-queued {
+  color: #6366f1;
+}
+.status-idle {
+  color: #a1a1aa;
+}
 
 /* Aurora Background */
 .aurora-bg {
@@ -74,14 +94,23 @@
   width: 100vw;
   height: 100vh;
   z-index: -1;
-  background: 
-    radial-gradient(circle at 50% 50%, rgba(120, 119, 198, 0.15), transparent 25%),
-    radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.15), transparent 25%);
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(120, 119, 198, 0.15),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(168, 85, 247, 0.15),
+      transparent 25%
+    );
   pointer-events: none;
 }
 
 /* Lenis Scroll */
-html.lenis, html.lenis body {
+html.lenis,
+html.lenis body {
   height: auto;
 }
 .lenis.lenis-smooth {
@@ -101,6 +130,11 @@ html.lenis, html.lenis body {
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }

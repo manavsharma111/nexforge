@@ -22,13 +22,16 @@ const cliRoutes = require("./routes/cli.route")
 const AskAIRoutes = require("./routes/ai.route")
 const { initRedis, getCache, setCache } = require("./services/redis.service")
 const { streamFileToResponse, r2Client } = require("./config/r2")
-const { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command } = require("@aws-sdk/client-s3")
+const {
+  GetObjectCommand,
+  HeadObjectCommand,
+  ListObjectsV2Command,
+} = require("@aws-sdk/client-s3")
 const mime = require("mime-types")
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.CLIENT_URL,
-].filter(Boolean)
+const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_URL].filter(
+  Boolean,
+)
 
 const allowedPatterns = [/\.vercel\.app$/, /\.railway\.app$/]
 
@@ -82,20 +85,24 @@ const getProjectIdFromReferer = (referer) => {
     const url = new URL(referer)
     const match = url.pathname.match(/^\/p\/([A-Za-z0-9]+)(?:\/|$)/)
     if (match) return match[1]
-    return url.searchParams.get('projectId') || url.searchParams.get('p')
+    return url.searchParams.get("projectId") || url.searchParams.get("p")
   } catch (e) {
     return null
   }
 }
 
 const resolveProject = async (req) => {
-  let identifier = req.query.projectId || req.query.p || getProjectIdFromReferer(req.get('referer')) || req.cookies?.nexforge_project_id
+  let identifier =
+    req.query.projectId ||
+    req.query.p ||
+    getProjectIdFromReferer(req.get("referer")) ||
+    req.cookies?.nexforge_project_id
   if (!identifier) return null
 
   const cacheKey = `route:${identifier}`
   let project = await getCache(cacheKey)
   if (!project) {
-    const Project = require('./models/project.model')
+    const Project = require("./models/project.model")
     const mongoose = require("mongoose")
     if (mongoose.Types.ObjectId.isValid(identifier)) {
       project = await Project.findById(identifier).lean()
@@ -108,14 +115,16 @@ const resolveProject = async (req) => {
       await setCache(`route:${project._id.toString()}`, project, 3600)
     }
   }
-  return project ? { projectId: project._id.toString(), slug: project.subdomain } : null
+  return project
+    ? { projectId: project._id.toString(), slug: project.subdomain }
+    : null
 }
 
 const getR2Object = async (projectId, assetPath) => {
   const BUCKET = process.env.CLOUDFLARE_R2_BUCKET
   const r2Key = `${projectId}/current/dist${assetPath}`
   const response = await r2Client.send(
-    new GetObjectCommand({ Bucket: BUCKET, Key: r2Key })
+    new GetObjectCommand({ Bucket: BUCKET, Key: r2Key }),
   )
   return { response, key: r2Key }
 }
@@ -158,17 +167,18 @@ const injectProjectRoutingScript = (html, slug) => {
 const serveR2File = async (projectId, assetPath, res, options = {}) => {
   try {
     const { response, key } = await getR2Object(projectId, assetPath)
-    const contentType = mime.lookup(key) || 'application/octet-stream'
-    res.setHeader('Content-Type', contentType)
-    res.setHeader('Cache-Control', 'public, max-age=86400')
-    if (response.ContentLength) res.setHeader('Content-Length', response.ContentLength)
+    const contentType = mime.lookup(key) || "application/octet-stream"
+    res.setHeader("Content-Type", contentType)
+    res.setHeader("Cache-Control", "public, max-age=86400")
+    if (response.ContentLength)
+      res.setHeader("Content-Length", response.ContentLength)
 
-    if (options.injectProjectScript && contentType === 'text/html') {
+    if (options.injectProjectScript && contentType === "text/html") {
       const chunks = []
       for await (const chunk of response.Body) {
         chunks.push(chunk)
       }
-      const html = Buffer.concat(chunks).toString('utf8')
+      const html = Buffer.concat(chunks).toString("utf8")
       const injected = injectProjectRoutingScript(html, options.slug)
       return res.send(injected)
     }
@@ -176,23 +186,25 @@ const serveR2File = async (projectId, assetPath, res, options = {}) => {
     response.Body.pipe(res)
     return true
   } catch (err) {
-    if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) return false
+    if (err.name === "NoSuchKey" || err.$metadata?.httpStatusCode === 404)
+      return false
     throw err
   }
 }
 
 const serveProjectDist = async (projectId, reqPath, res, slug) => {
-  const normalizedPath = reqPath === '/' || reqPath === '' ? '/index.html' : reqPath
-  const hasExtension = path.extname(normalizedPath) !== ''
+  const normalizedPath =
+    reqPath === "/" || reqPath === "" ? "/index.html" : reqPath
+  const hasExtension = path.extname(normalizedPath) !== ""
 
   const served = await serveR2File(projectId, normalizedPath, res, {
-    injectProjectScript: normalizedPath === '/index.html',
+    injectProjectScript: normalizedPath === "/index.html",
     slug,
   })
   if (served) return true
 
   if (!hasExtension) {
-    const fallbackServed = await serveR2File(projectId, '/index.html', res, {
+    const fallbackServed = await serveR2File(projectId, "/index.html", res, {
       injectProjectScript: true,
       slug,
     })
@@ -201,60 +213,83 @@ const serveProjectDist = async (projectId, reqPath, res, slug) => {
   return false
 }
 
-app.use('/assets', async (req, res, next) => {
+app.use("/assets", async (req, res, next) => {
   const projectInfo = await resolveProject(req)
   if (!projectInfo) return next()
 
-  const assetPath = req.originalUrl.split('?')[0]
+  const assetPath = req.originalUrl.split("?")[0]
 
   try {
-    const served = await serveProjectDist(projectInfo.projectId, assetPath, res, projectInfo.slug)
+    const served = await serveProjectDist(
+      projectInfo.projectId,
+      assetPath,
+      res,
+      projectInfo.slug,
+    )
     if (served) return
     return next()
   } catch (error) {
-    console.error('Asset serve error:', error)
-    return res.status(500).send('Error loading asset from storage.')
+    console.error("Asset serve error:", error)
+    return res.status(500).send("Error loading asset from storage.")
   }
 })
 
 // --- Path-based public project route: /p/:slug
-app.use('/p/:slug', async (req, res, next) => {
+app.use("/p/:slug", async (req, res, next) => {
   try {
     const slug = req.params.slug
     const projectInfo = await resolveProject({ query: { p: slug } })
     if (!projectInfo) {
-      return res.status(404).send('<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>')
+      return res
+        .status(404)
+        .send(
+          "<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>",
+        )
     }
 
-    res.cookie('nexforge_project_id', projectInfo.projectId, {
-      path: '/',
-      sameSite: 'Lax',
-      secure: process.env.NODE_ENV === 'production',
+    res.cookie("nexforge_project_id", projectInfo.projectId, {
+      path: "/",
+      sameSite: "Lax",
+      secure: process.env.NODE_ENV === "production",
     })
 
-    const projectPath = req.path.replace(`/p/${slug}`, '') || '/'
-    const served = await serveProjectDist(projectInfo.projectId, projectPath, res, projectInfo.slug)
+    const projectPath = req.path.replace(`/p/${slug}`, "") || "/"
+    const served = await serveProjectDist(
+      projectInfo.projectId,
+      projectPath,
+      res,
+      projectInfo.slug,
+    )
     if (served) return
 
-    return res.status(404).send('<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>')
+    return res
+      .status(404)
+      .send(
+        "<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>",
+      )
   } catch (e) {
-    console.error('Path-based serve error:', e)
-    return res.status(500).send('Error loading deployment from storage.')
+    console.error("Path-based serve error:", e)
+    return res.status(500).send("Error loading deployment from storage.")
   }
 })
 
 app.use(async (req, res, next) => {
-  if (req.path.startsWith('/api')) return next()
-  if (req.path.startsWith('/p/')) return next()
+  if (req.path.startsWith("/api")) return next()
+  if (req.path.startsWith("/p/")) return next()
   const projectInfo = await resolveProject(req)
   if (!projectInfo) return next()
 
   try {
-    const served = await serveProjectDist(projectInfo.projectId, req.path, res, projectInfo.slug)
+    const served = await serveProjectDist(
+      projectInfo.projectId,
+      req.path,
+      res,
+      projectInfo.slug,
+    )
     if (served) return
   } catch (err) {
-    console.error('Root project routing error:', err)
-    return res.status(500).send('Error loading deployment from storage.')
+    console.error("Root project routing error:", err)
+    return res.status(500).send("Error loading deployment from storage.")
   }
 
   return next()
@@ -293,7 +328,11 @@ app.use(async (req, res, next) => {
 
       if (project.projectType === "NODE" && project.internalPort) {
         if (previewId) {
-          return res.status(400).send("Preview URLs are currently only supported for Frontend/Static projects.")
+          return res
+            .status(400)
+            .send(
+              "Preview URLs are currently only supported for Frontend/Static projects.",
+            )
         }
         if (!proxies[projectId]) {
           console.log(
@@ -328,16 +367,18 @@ app.use(async (req, res, next) => {
       const tryServeR2File = async (key) => {
         try {
           const response = await r2Client.send(
-            new GetObjectCommand({ Bucket: BUCKET, Key: key })
+            new GetObjectCommand({ Bucket: BUCKET, Key: key }),
           )
           const contentType = mime.lookup(key) || "application/octet-stream"
           res.setHeader("Content-Type", contentType)
           res.setHeader("Cache-Control", "public, max-age=86400")
-          if (response.ContentLength) res.setHeader("Content-Length", response.ContentLength)
+          if (response.ContentLength)
+            res.setHeader("Content-Length", response.ContentLength)
           response.Body.pipe(res)
           return true
         } catch (err) {
-          if (err.name === "NoSuchKey" || err.$metadata?.httpStatusCode === 404) return false
+          if (err.name === "NoSuchKey" || err.$metadata?.httpStatusCode === 404)
+            return false
           throw err
         }
       }
@@ -349,11 +390,13 @@ app.use(async (req, res, next) => {
           const fallbackKey = `${r2Prefix}/index.html`
           const fallbackServed = await tryServeR2File(fallbackKey)
           if (!fallbackServed) {
-            return res.status(404).send(
-              previewId
-                ? "<h1>404 - Preview Not Found</h1><p>The requested preview deployment does not exist.</p>"
-                : "<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>"
-            )
+            return res
+              .status(404)
+              .send(
+                previewId
+                  ? "<h1>404 - Preview Not Found</h1><p>The requested preview deployment does not exist.</p>"
+                  : "<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>",
+              )
           }
         }
         return
@@ -390,6 +433,6 @@ app.use("/api/github", githubRoutes)
 app.use("/api/domains", domainRoutes)
 app.use("/api/analytics", analyticsRoutes)
 app.use("/api/cli", cliRoutes)
-app.use('/api/ai', AskAIRoutes)
+app.use("/api/ai", AskAIRoutes)
 
 app.use(errorHandler)

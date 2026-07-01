@@ -55,13 +55,16 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         console.error("Session expired. Please log in again.")
         localStorage.removeItem("accessToken")
-        
+
         // public routes list jahan redirect nahi karna chahiye
         const publicRoutes = ["/", "/login", "/home"]
         const currentPath = window.location.pathname
-        
+
         // agar pehle se login page pe hain ya koi public route pe hain toh redirect mat karna
-        if (!publicRoutes.includes(currentPath) && !currentPath.startsWith("/auth")) {
+        if (
+          !publicRoutes.includes(currentPath) &&
+          !currentPath.startsWith("/auth")
+        ) {
           window.location.href = "/login"
         }
         return Promise.reject(refreshError)

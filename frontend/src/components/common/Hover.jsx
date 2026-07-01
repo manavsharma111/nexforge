@@ -13,7 +13,11 @@ CustomEase.create("lenis", "M0,0,C0.075,0.82,0.165,1,1,1")
  *   Enter → fills from LEFT → RIGHT
  *   Leave → exits going RIGHTWARD
  */
-export default function Hover({ children, className = "", fillColor = "#ff007f" }) {
+export default function Hover({
+  children,
+  className = "",
+  fillColor = "#ff007f",
+}) {
   const wrapRef = useRef(null)
   const fillRef = useRef(null)
 
@@ -23,13 +27,13 @@ export default function Hover({ children, className = "", fillColor = "#ff007f" 
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
-    
+
     // Initial check
     checkMobile()
-    
+
     // Listen for resize (useful when toggling devtools)
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
   useEffect(() => {
@@ -55,7 +59,7 @@ export default function Hover({ children, className = "", fillColor = "#ff007f" 
       gsap.to(fill, {
         scaleX: 1,
         duration: 0.65,
-        ease: "lenis",                    // custom Lenis-style ease
+        ease: "lenis", // custom Lenis-style ease
         transformOrigin: "left center",
         force3D: true,
         overwrite: true,
@@ -68,7 +72,7 @@ export default function Hover({ children, className = "", fillColor = "#ff007f" 
         scaleX: 0,
         duration: 0.65,
         ease: "lenis",
-        transformOrigin: "right center",   // shrinks towards right
+        transformOrigin: "right center", // shrinks towards right
         force3D: true,
         overwrite: true,
       })
@@ -103,9 +107,7 @@ export default function Hover({ children, className = "", fillColor = "#ff007f" 
         }}
       />
       {/* Content always on top */}
-      <div className="relative z-10">
-        {children}
-      </div>
+      <div className="relative z-10">{children}</div>
     </div>
-  );
+  )
 }

@@ -1,5 +1,13 @@
 import React from "react"
-import { Folder, Layout, Settings, Terminal, ArrowLeft, Plus, Trash2 } from "lucide-react"
+import {
+  Folder,
+  Layout,
+  Settings,
+  Terminal,
+  ArrowLeft,
+  Plus,
+  Trash2,
+} from "lucide-react"
 import { Card } from "../ui/Card"
 import { Input } from "../ui/Input"
 import { Button } from "../ui/Button"

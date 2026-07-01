@@ -39,7 +39,12 @@ export default function Sidebar() {
     {
       title: "Documentation",
       items: [
-        { id: "deployment-docs", icon: FileText, label: "Platform Guide", path: "/deployment-docs" },
+        {
+          id: "deployment-docs",
+          icon: FileText,
+          label: "Platform Guide",
+          path: "/deployment-docs",
+        },
         { id: "docs", icon: Terminal, label: "CLI Docs", path: "/docs" },
       ],
     },

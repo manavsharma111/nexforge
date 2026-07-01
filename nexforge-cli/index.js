@@ -40,36 +40,43 @@ program
   .action(async () => {
     const readline = require("readline").createInterface({
       input: process.stdin,
-      output: process.stdout
+      output: process.stdout,
     })
 
     console.log(chalk.cyan("🚀 Welcome to NexForge CLI!"))
-    
-    readline.question("Please enter your personal CLI Token (Generate this from Dashboard Settings): ", (cliToken) => {
-      if (!cliToken) {
-        console.log(chalk.red("CLI Token cannot be empty!"))
-        readline.close()
-        return
-      }
 
-      readline.question("Please enter your Project ID: ", (projectId) => {
-        if (!projectId) {
-          console.log(chalk.red("Project ID cannot be empty!"))
+    readline.question(
+      "Please enter your personal CLI Token (Generate this from Dashboard Settings): ",
+      (cliToken) => {
+        if (!cliToken) {
+          console.log(chalk.red("CLI Token cannot be empty!"))
           readline.close()
           return
         }
 
-        if (!fs.existsSync(CONFIG_DIR)) {
-          fs.mkdirSync(CONFIG_DIR, { recursive: true })
-        }
+        readline.question("Please enter your Project ID: ", (projectId) => {
+          if (!projectId) {
+            console.log(chalk.red("Project ID cannot be empty!"))
+            readline.close()
+            return
+          }
 
-        // Save both Token and Project ID
-        fs.writeFileSync(CONFIG_FILE, JSON.stringify({ cliToken, projectId }))
-        
-        console.log(chalk.green("✅ Successfully logged in! You can now run `nexforge deploy`"))
-        readline.close()
-      })
-    })
+          if (!fs.existsSync(CONFIG_DIR)) {
+            fs.mkdirSync(CONFIG_DIR, { recursive: true })
+          }
+
+          // Save both Token and Project ID
+          fs.writeFileSync(CONFIG_FILE, JSON.stringify({ cliToken, projectId }))
+
+          console.log(
+            chalk.green(
+              "✅ Successfully logged in! You can now run `nexforge deploy`",
+            ),
+          )
+          readline.close()
+        })
+      },
+    )
   })
 
 // INIT COMMAND
@@ -80,67 +87,90 @@ program
   .action(async () => {
     const readline = require("readline").createInterface({
       input: process.stdin,
-      output: process.stdout
+      output: process.stdout,
     })
 
     console.log(chalk.cyan("✨ Let's set up a new NexForge project!"))
-    
-    readline.question("What is your project name? (e.g. my-app): ", async (projectName) => {
-      if (!projectName) {
-        console.log(chalk.red("Project name cannot be empty!"))
-        readline.close()
-        return
-      }
 
-      readline.question("What framework are you using? (React, Vue, Express, Node, Next.js): ", async (framework) => {
-        if (!framework) {
-          console.log(chalk.red("Framework cannot be empty!"))
+    readline.question(
+      "What is your project name? (e.g. my-app): ",
+      async (projectName) => {
+        if (!projectName) {
+          console.log(chalk.red("Project name cannot be empty!"))
           readline.close()
           return
         }
 
-        const spinner = ora("Creating project on NexForge servers...").start()
-        
-        try {
-          const response = await axios.post(`${API_BASE_URL}/cli/init`, {
-            projectName,
-            framework,
-            projectType: ["express", "node"].includes(framework.toLowerCase()) ? "NODE" : "STATIC"
-          })
+        readline.question(
+          "What framework are you using? (React, Vue, Express, Node, Next.js): ",
+          async (framework) => {
+            if (!framework) {
+              console.log(chalk.red("Framework cannot be empty!"))
+              readline.close()
+              return
+            }
 
-          const { projectId } = response.data
+            const spinner = ora(
+              "Creating project on NexForge servers...",
+            ).start()
 
-          // Ensure the config directory exists before saving
-          if (!fs.existsSync(CONFIG_DIR)) {
-            fs.mkdirSync(CONFIG_DIR, { recursive: true })
-          }
+            try {
+              const response = await axios.post(`${API_BASE_URL}/cli/init`, {
+                projectName,
+                framework,
+                projectType: ["express", "node"].includes(
+                  framework.toLowerCase(),
+                )
+                  ? "NODE"
+                  : "STATIC",
+              })
 
-          // We preserve the existing CLI Token if it exists, and just update the projectId
-          let currentConfig = {}
-          if (fs.existsSync(CONFIG_FILE)) {
-            currentConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"))
-          }
+              const { projectId } = response.data
 
-          fs.writeFileSync(CONFIG_FILE, JSON.stringify({ ...currentConfig, projectId }))
+              // Ensure the config directory exists before saving
+              if (!fs.existsSync(CONFIG_DIR)) {
+                fs.mkdirSync(CONFIG_DIR, { recursive: true })
+              }
 
-          spinner.succeed(chalk.green("🎉 Project created successfully!"))
-          console.log(chalk.cyan(`Project ID: ${projectId} has been saved locally.`))
-          console.log(chalk.yellow(`You can now run \`nexforge deploy\` to push your code.`))
+              // We preserve the existing CLI Token if it exists, and just update the projectId
+              let currentConfig = {}
+              if (fs.existsSync(CONFIG_FILE)) {
+                currentConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"))
+              }
 
-        } catch (error) {
-          spinner.fail(chalk.red("Failed to create project!"))
-          if (error.response && error.response.data) {
-            console.log(chalk.red(`Server Error: ${JSON.stringify(error.response.data)}`))
-          } else {
-            console.error(error.message)
-          }
-        } finally {
-          readline.close()
-        }
-      })
-    })
+              fs.writeFileSync(
+                CONFIG_FILE,
+                JSON.stringify({ ...currentConfig, projectId }),
+              )
+
+              spinner.succeed(chalk.green("🎉 Project created successfully!"))
+              console.log(
+                chalk.cyan(`Project ID: ${projectId} has been saved locally.`),
+              )
+              console.log(
+                chalk.yellow(
+                  `You can now run \`nexforge deploy\` to push your code.`,
+                ),
+              )
+            } catch (error) {
+              spinner.fail(chalk.red("Failed to create project!"))
+              if (error.response && error.response.data) {
+                console.log(
+                  chalk.red(
+                    `Server Error: ${JSON.stringify(error.response.data)}`,
+                  ),
+                )
+              } else {
+                console.error(error.message)
+              }
+            } finally {
+              readline.close()
+            }
+          },
+        )
+      },
+    )
   })
-
 
 // DEPLOY COMMAND
 // This is where the magic happens. We package the current folder and fire it up to our backend servers.
@@ -151,7 +181,11 @@ program
   .action(async () => {
     // First we check if they are logged in by reading the config file
     if (!fs.existsSync(CONFIG_FILE)) {
-      console.log(chalk.red("❌ You are not logged in. Please run `nexforge login` first."))
+      console.log(
+        chalk.red(
+          "❌ You are not logged in. Please run `nexforge login` first.",
+        ),
+      )
       return
     }
 
@@ -178,7 +212,7 @@ program
       // Skipping node_modules is super important otherwise the upload would take forever
       archive.glob("**/*", {
         cwd: process.cwd(),
-        ignore: ["node_modules/**", ".git/**", "nexforge-build.zip", ".env"]
+        ignore: ["node_modules/**", ".git/**", "nexforge-build.zip", ".env"],
       })
 
       await archive.finalize()
@@ -190,11 +224,15 @@ program
       const formData = new FormData()
       formData.append("projectZip", fs.createReadStream(zipPath))
 
-      const response = await axios.post(`${API_BASE_URL}/cli/deploy/${projectId}`, formData, {
-        headers: {
-          ...formData.getHeaders()
-        }
-      })
+      const response = await axios.post(
+        `${API_BASE_URL}/cli/deploy/${projectId}`,
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+          },
+        },
+      )
 
       spinner.succeed(chalk.green("🎉 Deployment queued successfully!"))
       console.log(chalk.cyan(`Live URL: ${response.data.liveUrl}`))
@@ -203,14 +241,23 @@ program
       // Automatically stream logs after deployment
       const io = require("socket.io-client")
       const socket = io(API_BASE_URL.replace("/api", ""), {
-        transports: ["websocket", "polling"]
+        transports: ["websocket", "polling"],
       })
 
       socket.emit("joinProject", projectId)
 
       socket.on("new-log", (entry) => {
-        const color = entry.level === "ERROR" ? chalk.red : entry.level === "WARN" ? chalk.yellow : chalk.white
-        console.log(color(`[${new Date(entry.timestamp).toLocaleTimeString()}] ${entry.message}`))
+        const color =
+          entry.level === "ERROR"
+            ? chalk.red
+            : entry.level === "WARN"
+              ? chalk.yellow
+              : chalk.white
+        console.log(
+          color(
+            `[${new Date(entry.timestamp).toLocaleTimeString()}] ${entry.message}`,
+          ),
+        )
       })
 
       socket.on("status-change", (data) => {
@@ -224,13 +271,14 @@ program
           process.exit(1)
         }
       })
-
     } catch (error) {
       spinner.fail(chalk.red("Deployment failed!"))
-      
+
       // If our API returned a specific error message we want to show that to the user
       if (error.response && error.response.data) {
-        console.log(chalk.red(`Server Error: ${JSON.stringify(error.response.data)}`))
+        console.log(
+          chalk.red(`Server Error: ${JSON.stringify(error.response.data)}`),
+        )
       } else {
         console.error(error.message)
       }
@@ -249,7 +297,11 @@ program
   .description("Rollback to the previous stable deployment")
   .action(async () => {
     console.log(chalk.yellow("🚧 Rollback command is under construction."))
-    console.log(chalk.cyan("Wait for the backend versioning architecture to be finalized before using this."))
+    console.log(
+      chalk.cyan(
+        "Wait for the backend versioning architecture to be finalized before using this.",
+      ),
+    )
   })
 
 // ENV COMMANDS
@@ -263,7 +315,11 @@ envCommand
   .description("Push local .env file to NexForge")
   .action(async () => {
     if (!fs.existsSync(CONFIG_FILE)) {
-      console.log(chalk.red("❌ You are not logged in. Please run `nexforge login` first."))
+      console.log(
+        chalk.red(
+          "❌ You are not logged in. Please run `nexforge login` first.",
+        ),
+      )
       return
     }
 
@@ -280,15 +336,17 @@ envCommand
     try {
       const dotenv = require("dotenv")
       const envConfig = dotenv.parse(fs.readFileSync(envPath))
-      
-      const envs = Object.keys(envConfig).map(key => ({
+
+      const envs = Object.keys(envConfig).map((key) => ({
         key,
-        value: envConfig[key]
+        value: envConfig[key],
       }))
 
       await axios.post(`${API_BASE_URL}/cli/env/push/${projectId}`, { envs })
-      
-      spinner.succeed(chalk.green("🎉 Environment variables pushed successfully!"))
+
+      spinner.succeed(
+        chalk.green("🎉 Environment variables pushed successfully!"),
+      )
     } catch (error) {
       spinner.fail(chalk.red("Failed to push environment variables!"))
       console.error(error.message)
@@ -300,7 +358,11 @@ envCommand
   .description("Pull environment variables from NexForge to local .env")
   .action(async () => {
     if (!fs.existsSync(CONFIG_FILE)) {
-      console.log(chalk.red("❌ You are not logged in. Please run `nexforge login` first."))
+      console.log(
+        chalk.red(
+          "❌ You are not logged in. Please run `nexforge login` first.",
+        ),
+      )
       return
     }
 
@@ -309,23 +371,29 @@ envCommand
 
     const spinner = ora("Pulling environment variables...").start()
     try {
-      const response = await axios.get(`${API_BASE_URL}/cli/env/pull/${projectId}`)
+      const response = await axios.get(
+        `${API_BASE_URL}/cli/env/pull/${projectId}`,
+      )
       const envs = response.data.envs
 
       if (!envs || envs.length === 0) {
-        spinner.info(chalk.yellow("No environment variables found on the server."))
+        spinner.info(
+          chalk.yellow("No environment variables found on the server."),
+        )
         return
       }
 
       let envContent = ""
-      envs.forEach(e => {
+      envs.forEach((e) => {
         envContent += `${e.key}=${e.value}\n`
       })
 
       const envPath = path.join(process.cwd(), ".env")
       fs.writeFileSync(envPath, envContent)
 
-      spinner.succeed(chalk.green("🎉 Environment variables pulled successfully!"))
+      spinner.succeed(
+        chalk.green("🎉 Environment variables pulled successfully!"),
+      )
       console.log(chalk.cyan(`Saved to ${envPath}`))
     } catch (error) {
       spinner.fail(chalk.red("Failed to pull environment variables!"))
@@ -340,37 +408,65 @@ program
   .description("Stream live build logs for your NexForge project")
   .action(async () => {
     if (!fs.existsSync(CONFIG_FILE)) {
-      console.log(chalk.red("❌ You are not logged in. Please run `nexforge login` first."))
+      console.log(
+        chalk.red(
+          "❌ You are not logged in. Please run `nexforge login` first.",
+        ),
+      )
       return
     }
 
     const config = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"))
     const projectId = config.projectId
 
-    console.log(chalk.cyan(`🔌 Connecting to live log stream for project ${projectId}...`))
+    console.log(
+      chalk.cyan(
+        `🔌 Connecting to live log stream for project ${projectId}...`,
+      ),
+    )
 
     const io = require("socket.io-client")
     const socket = io(API_BASE_URL.replace("/api", ""), {
-      transports: ["websocket", "polling"]
+      transports: ["websocket", "polling"],
     })
 
     socket.emit("joinProject", projectId)
 
     socket.on("initial-logs", (initialLogs) => {
-      initialLogs.forEach(entry => {
-        const color = entry.level === "ERROR" ? chalk.red : entry.level === "WARN" ? chalk.yellow : chalk.white
-        console.log(color(`[${new Date(entry.timestamp).toLocaleTimeString()}] ${entry.message}`))
+      initialLogs.forEach((entry) => {
+        const color =
+          entry.level === "ERROR"
+            ? chalk.red
+            : entry.level === "WARN"
+              ? chalk.yellow
+              : chalk.white
+        console.log(
+          color(
+            `[${new Date(entry.timestamp).toLocaleTimeString()}] ${entry.message}`,
+          ),
+        )
       })
     })
 
     socket.on("new-log", (entry) => {
-      const color = entry.level === "ERROR" ? chalk.red : entry.level === "WARN" ? chalk.yellow : chalk.white
-      console.log(color(`[${new Date(entry.timestamp).toLocaleTimeString()}] ${entry.message}`))
+      const color =
+        entry.level === "ERROR"
+          ? chalk.red
+          : entry.level === "WARN"
+            ? chalk.yellow
+            : chalk.white
+      console.log(
+        color(
+          `[${new Date(entry.timestamp).toLocaleTimeString()}] ${entry.message}`,
+        ),
+      )
     })
 
     socket.on("status-change", (data) => {
       if (data.status === "LIVE" || data.status === "FAILED") {
-        console.log(chalk.gray(`\nPipeline finished with status: ${data.status}`))
+        console.log(
+          chalk.gray(`\nPipeline finished with status: ${data.status}`),
+        )
         process.exit(0)
       }
     })
@@ -383,7 +479,11 @@ program
   .description("Rollback your live website to a previous deployment")
   .action(async () => {
     if (!fs.existsSync(CONFIG_FILE)) {
-      console.log(chalk.red("❌ You are not logged in. Please run `nexforge login` first."))
+      console.log(
+        chalk.red(
+          "❌ You are not logged in. Please run `nexforge login` first.",
+        ),
+      )
       return
     }
 
@@ -392,7 +492,9 @@ program
 
     const spinner = ora("Fetching previous deployments...").start()
     try {
-      const response = await axios.get(`${API_BASE_URL}/cli/deployments/${projectId}`)
+      const response = await axios.get(
+        `${API_BASE_URL}/cli/deployments/${projectId}`,
+      )
       const deployments = response.data.deployments
 
       spinner.stop()
@@ -405,48 +507,68 @@ program
       console.log(chalk.cyan("\nRecent Deployments:"))
       deployments.forEach((dep, index) => {
         const date = new Date(dep.createdAt).toLocaleString()
-        const statusColor = dep.status === "LIVE" ? chalk.green : dep.status === "FAILED" ? chalk.red : chalk.yellow
-        console.log(`[${index + 1}] ${dep._id} - ${statusColor(dep.status)} - ${date}`)
+        const statusColor =
+          dep.status === "LIVE"
+            ? chalk.green
+            : dep.status === "FAILED"
+              ? chalk.red
+              : chalk.yellow
+        console.log(
+          `[${index + 1}] ${dep._id} - ${statusColor(dep.status)} - ${date}`,
+        )
       })
 
       const readline = require("readline").createInterface({
         input: process.stdin,
-        output: process.stdout
+        output: process.stdout,
       })
 
-      readline.question("\nEnter the number of the deployment you want to rollback to (or 'q' to cancel): ", async (answer) => {
-        if (answer.toLowerCase() === 'q') {
-          readline.close()
-          return
-        }
-
-        const index = parseInt(answer) - 1
-        if (isNaN(index) || index < 0 || index >= deployments.length) {
-          console.log(chalk.red("Invalid selection."))
-          readline.close()
-          return
-        }
-
-        const selectedDeployment = deployments[index]
-        
-        const rollbackSpinner = ora(`Rolling back to ${selectedDeployment._id}...`).start()
-        try {
-          await axios.post(`${API_BASE_URL}/cli/rollback/${projectId}`, {
-            deploymentId: selectedDeployment._id
-          })
-          rollbackSpinner.succeed(chalk.green(`🎉 Successfully rolled back to deployment ${selectedDeployment._id}!`))
-          console.log(chalk.cyan("Your website has been instantly updated. No rebuild required."))
-        } catch (error) {
-          rollbackSpinner.fail(chalk.red("Rollback failed!"))
-          if (error.response && error.response.data) {
-            console.log(chalk.red(`Error: ${error.response.data.error}`))
-          } else {
-            console.error(error.message)
+      readline.question(
+        "\nEnter the number of the deployment you want to rollback to (or 'q' to cancel): ",
+        async (answer) => {
+          if (answer.toLowerCase() === "q") {
+            readline.close()
+            return
           }
-        } finally {
-          readline.close()
-        }
-      })
+
+          const index = parseInt(answer) - 1
+          if (isNaN(index) || index < 0 || index >= deployments.length) {
+            console.log(chalk.red("Invalid selection."))
+            readline.close()
+            return
+          }
+
+          const selectedDeployment = deployments[index]
+
+          const rollbackSpinner = ora(
+            `Rolling back to ${selectedDeployment._id}...`,
+          ).start()
+          try {
+            await axios.post(`${API_BASE_URL}/cli/rollback/${projectId}`, {
+              deploymentId: selectedDeployment._id,
+            })
+            rollbackSpinner.succeed(
+              chalk.green(
+                `🎉 Successfully rolled back to deployment ${selectedDeployment._id}!`,
+              ),
+            )
+            console.log(
+              chalk.cyan(
+                "Your website has been instantly updated. No rebuild required.",
+              ),
+            )
+          } catch (error) {
+            rollbackSpinner.fail(chalk.red("Rollback failed!"))
+            if (error.response && error.response.data) {
+              console.log(chalk.red(`Error: ${error.response.data.error}`))
+            } else {
+              console.error(error.message)
+            }
+          } finally {
+            readline.close()
+          }
+        },
+      )
     } catch (error) {
       spinner.fail(chalk.red("Failed to fetch deployments!"))
       console.error(error.message)
@@ -460,21 +582,21 @@ program
   .action(async () => {
     const readline = require("readline").createInterface({
       input: process.stdin,
-      output: process.stdout
+      output: process.stdout,
     })
 
     console.log(chalk.cyan("✨ Let's rename your project subdomain!"))
-    
+
     let defaultProjectId = ""
     if (fs.existsSync(CONFIG_FILE)) {
       const config = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"))
       defaultProjectId = config.projectId || ""
     }
 
-    const promptText = defaultProjectId 
-      ? `What is your project ID? (${defaultProjectId}) ` 
+    const promptText = defaultProjectId
+      ? `What is your project ID? (${defaultProjectId}) `
       : "What is your project ID? "
-    
+
     readline.question(promptText, async (inputProjectId) => {
       const projectId = inputProjectId.trim() || defaultProjectId
 
@@ -484,50 +606,70 @@ program
         return
       }
 
-      readline.question("What is your new subdomain? ", async (newSubdomain) => {
-        if (!newSubdomain) {
-          console.log(chalk.red("Subdomain cannot be empty!"))
-          readline.close()
-          return
-        }
-
-        const spinner = ora("Renaming project subdomain...").start()
-        
-        try {
-          const response = await axios.post(`${API_BASE_URL}/cli/rename/${projectId}`, {
-            newSubdomain
-          })
-
-          const { projectId } = response.data
-
-          // Ensure the config directory exists before saving
-          if (!fs.existsSync(CONFIG_DIR)) {
-            fs.mkdirSync(CONFIG_DIR, { recursive: true })
+      readline.question(
+        "What is your new subdomain? ",
+        async (newSubdomain) => {
+          if (!newSubdomain) {
+            console.log(chalk.red("Subdomain cannot be empty!"))
+            readline.close()
+            return
           }
 
-          // We preserve the existing CLI Token if it exists, and just update the projectId
-          let currentConfig = {}
-          if (fs.existsSync(CONFIG_FILE)) {
-            currentConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"))
+          const spinner = ora("Renaming project subdomain...").start()
+
+          try {
+            const response = await axios.post(
+              `${API_BASE_URL}/cli/rename/${projectId}`,
+              {
+                newSubdomain,
+              },
+            )
+
+            const { projectId } = response.data
+
+            // Ensure the config directory exists before saving
+            if (!fs.existsSync(CONFIG_DIR)) {
+              fs.mkdirSync(CONFIG_DIR, { recursive: true })
+            }
+
+            // We preserve the existing CLI Token if it exists, and just update the projectId
+            let currentConfig = {}
+            if (fs.existsSync(CONFIG_FILE)) {
+              currentConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"))
+            }
+
+            fs.writeFileSync(
+              CONFIG_FILE,
+              JSON.stringify({ ...currentConfig, projectId }),
+            )
+
+            spinner.succeed(
+              chalk.green("🎉 Project subdomain renamed successfully!"),
+            )
+            console.log(
+              chalk.cyan(`Project ID: ${projectId} has been saved locally.`),
+            )
+            console.log(
+              chalk.yellow(
+                `You can now run \`nexforge deploy\` to push your code.`,
+              ),
+            )
+          } catch (error) {
+            spinner.fail(chalk.red("Failed to rename project subdomain!"))
+            if (error.response && error.response.data) {
+              console.log(
+                chalk.red(
+                  `Server Error: ${JSON.stringify(error.response.data)}`,
+                ),
+              )
+            } else {
+              console.error(error.message)
+            }
+          } finally {
+            readline.close()
           }
-
-          fs.writeFileSync(CONFIG_FILE, JSON.stringify({ ...currentConfig, projectId }))
-
-          spinner.succeed(chalk.green("🎉 Project subdomain renamed successfully!"))
-          console.log(chalk.cyan(`Project ID: ${projectId} has been saved locally.`))
-          console.log(chalk.yellow(`You can now run \`nexforge deploy\` to push your code.`))
-
-        } catch (error) {
-          spinner.fail(chalk.red("Failed to rename project subdomain!"))
-          if (error.response && error.response.data) {
-            console.log(chalk.red(`Server Error: ${JSON.stringify(error.response.data)}`))
-          } else {
-            console.error(error.message)
-          }
-        } finally {
-          readline.close()
-        }
-      })
+        },
+      )
     })
   })
 

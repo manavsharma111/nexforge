@@ -61,7 +61,8 @@ export default function DomainCard({ project, onUpdate }) {
       toast.success("Subdomain updated successfully")
       setIsEditing(false)
     } catch (err) {
-      const message = err.response?.data?.message || "Failed to update subdomain"
+      const message =
+        err.response?.data?.message || "Failed to update subdomain"
       setError(message)
       toast.error(message)
     } finally {

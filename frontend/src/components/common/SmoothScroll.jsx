@@ -1,29 +1,29 @@
-import { useEffect } from 'react'
-import Lenis from 'lenis'
-import 'lenis/dist/lenis.css'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useEffect } from "react"
+import Lenis from "lenis"
+import "lenis/dist/lenis.css"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 gsap.registerPlugin(ScrollTrigger)
 
 const SmoothScroll = ({ children }) => {
   useEffect(() => {
     // Prevent browser from restoring scroll position, which conflicts with GSAP and Lenis
-    if ('scrollRestoration' in history) {
-      history.scrollRestoration = 'manual'
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual"
     }
-    
+
     // Force scroll to top on page load/refresh
     window.scrollTo(0, 0)
-    
+
     // GSAP Mobile Optimization: Prevents layout thrashing on address bar hide/show
     ScrollTrigger.config({ ignoreMobileResize: true })
-    
+
     // Removing ScrollTrigger.normalizeScroll(true) as it often breaks native scroll wheel and causes jank on desktop
-    
+
     const lenis = new Lenis({
       lerp: 0.05, // Lower value = more buttery/smooth, higher = more responsive (default is 0.1)
-      wheelMultiplier: 1, 
+      wheelMultiplier: 1,
       smoothWheel: true,
       syncTouch: true,
       touchMultiplier: 1.5, // Thoda kam kiya taaki touch par ekdam se na bhaage
@@ -34,7 +34,7 @@ const SmoothScroll = ({ children }) => {
     window.lenis = lenis
 
     // Synchronize Lenis scrolling with GSAP ScrollTrigger
-    lenis.on('scroll', ScrollTrigger.update)
+    lenis.on("scroll", ScrollTrigger.update)
 
     // Use GSAP's ticker instead of default requestAnimationFrame
     // to ensure animations and scrolling run in the same paint frame

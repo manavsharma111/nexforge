@@ -41,9 +41,14 @@ export default function TechMarquee() {
             >
               <div
                 className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: tech.color, boxShadow: `0 0 8px ${tech.color}40` }}
+                style={{
+                  backgroundColor: tech.color,
+                  boxShadow: `0 0 8px ${tech.color}40`,
+                }}
               ></div>
-              <span className="text-sm font-medium text-[#ccc] whitespace-nowrap">{tech.name}</span>
+              <span className="text-sm font-medium text-[#ccc] whitespace-nowrap">
+                {tech.name}
+              </span>
             </div>
           ))}
         </div>
@@ -64,9 +69,14 @@ export default function TechMarquee() {
             >
               <div
                 className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: tech.color, boxShadow: `0 0 8px ${tech.color}40` }}
+                style={{
+                  backgroundColor: tech.color,
+                  boxShadow: `0 0 8px ${tech.color}40`,
+                }}
               ></div>
-              <span className="text-sm font-medium text-[#ccc] whitespace-nowrap">{tech.name}</span>
+              <span className="text-sm font-medium text-[#ccc] whitespace-nowrap">
+                {tech.name}
+              </span>
             </div>
           ))}
         </div>

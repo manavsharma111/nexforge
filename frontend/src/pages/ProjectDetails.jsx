@@ -10,7 +10,7 @@ import {
   Settings,
   Webhook,
   Copy,
-  Check
+  Check,
 } from "lucide-react"
 import { fetchProjectById } from "../redux/slices/projectSlice"
 import projectService from "../services/projectService"
@@ -91,7 +91,6 @@ export default function ProjectDetails() {
       socket.disconnect()
     }
   }, [id, backendHost])
-
 
   const handleRedeploy = async () => {
     setDeploying(true)
@@ -200,7 +199,11 @@ export default function ProjectDetails() {
               className="text-[#A1A1AA] hover:text-[#FFFFFF] transition-colors p-1 rounded hover:bg-[#1E1E20]"
               title="Copy Project ID"
             >
-              {copied ? <Check size={14} className="text-[#10B981]" /> : <Copy size={14} />}
+              {copied ? (
+                <Check size={14} className="text-[#10B981]" />
+              ) : (
+                <Copy size={14} />
+              )}
             </button>
           </div>
         </div>

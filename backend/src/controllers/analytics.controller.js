@@ -9,12 +9,10 @@ const getProjectAnalytics = async (req, res) => {
     const { range } = req.query // Query format constraints: '1h', '24h', '7d'
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid project query parameter layout.",
-        })
+      return res.status(400).json({
+        success: false,
+        message: "Invalid project query parameter layout.",
+      })
     }
 
     const cacheKey = `analytics:${id}:${range || "1h"}`

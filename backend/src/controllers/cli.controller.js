@@ -16,7 +16,7 @@ const handleCliDeploy = async (req, res) => {
     // pass the zip file path to the deployment queue
     const options = {
       source: "cli",
-      zipPath: req.file.path
+      zipPath: req.file.path,
     }
 
     await enqueueDeployment(projectId, options)
@@ -27,10 +27,18 @@ const handleCliDeploy = async (req, res) => {
 
     // Use path-based live URL to avoid subdomain SSL issues in production
     const liveUrl = isLocal
-      ? "http://" + (project.subdomain || projectId) + `.${baseDomain}:8000/p/${projectId}`
+      ? "http://" +
+        (project.subdomain || projectId) +
+        `.${baseDomain}:8000/p/${projectId}`
       : `https://${baseDomain}/p/${projectId}`
 
-    res.status(200).json({ message: "CLI deployment queued successfully", projectId, liveUrl })
+    res
+      .status(200)
+      .json({
+        message: "CLI deployment queued successfully",
+        projectId,
+        liveUrl,
+      })
   } catch (error) {
     console.error("Error handling CLI deploy:", error)
     res.status(500).json({ error: "Internal server error" })
@@ -42,13 +50,19 @@ const handleCliInit = async (req, res) => {
     const { projectName, framework, projectType } = req.body
 
     if (!projectName || !framework) {
-      return res.status(400).json({ error: "Project name and framework are required" })
+      return res
+        .status(400)
+        .json({ error: "Project name and framework are required" })
     }
 
     // Check if project name is taken
     const existingProject = await Project.findOne({ projectName })
     if (existingProject) {
-      return res.status(400).json({ error: "Project name already exists. Please choose a different name." })
+      return res
+        .status(400)
+        .json({
+          error: "Project name already exists. Please choose a different name.",
+        })
     }
 
     // Generate a simple subdomain based on project name
@@ -65,10 +79,10 @@ const handleCliInit = async (req, res) => {
 
     await newProject.save()
 
-    res.status(201).json({ 
-      message: "Project created successfully", 
+    res.status(201).json({
+      message: "Project created successfully",
       projectId: newProject._id,
-      subdomain: newProject.subdomain 
+      subdomain: newProject.subdomain,
     })
   } catch (error) {
     console.error("Error handling CLI init:", error)
@@ -82,24 +96,28 @@ const handleCliEnvPush = async (req, res) => {
     const { envs } = req.body // Expecting an array of { key, value }
 
     if (!envs || !Array.isArray(envs)) {
-      return res.status(400).json({ error: "Invalid environment variables format" })
+      return res
+        .status(400)
+        .json({ error: "Invalid environment variables format" })
     }
 
     // Delete existing envs and replace them to keep it simple, just like Vercel pull/push overrides
     await Environment.deleteMany({ projectId })
 
-    const envDocs = envs.map(e => ({
+    const envDocs = envs.map((e) => ({
       projectId,
       key: e.key,
       value: e.value,
-      target: ["PRODUCTION", "PREVIEW", "DEVELOPMENT"]
+      target: ["PRODUCTION", "PREVIEW", "DEVELOPMENT"],
     }))
 
     if (envDocs.length > 0) {
       await Environment.insertMany(envDocs)
     }
 
-    res.status(200).json({ message: "Environment variables pushed successfully" })
+    res
+      .status(200)
+      .json({ message: "Environment variables pushed successfully" })
   } catch (error) {
     console.error("Error pushing envs:", error)
     res.status(500).json({ error: "Internal server error" })
@@ -111,7 +129,7 @@ const handleCliEnvPull = async (req, res) => {
     const { projectId } = req.params
 
     const envs = await Environment.find({ projectId }).select("key value -_id")
-    
+
     res.status(200).json({ envs })
   } catch (error) {
     console.error("Error pulling envs:", error)
@@ -127,7 +145,7 @@ const handleCliGetDeployments = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(10)
       .select("_id status createdAt")
-    
+
     res.status(200).json({ deployments })
   } catch (error) {
     console.error("Error fetching deployments:", error)
@@ -149,20 +167,31 @@ const handleCliRollback = async (req, res) => {
     const targetDeploymentDir = path.join(baseProjectDir, deploymentId)
 
     if (!fs.existsSync(targetDeploymentDir)) {
-      return res.status(404).json({ error: "Target deployment build files not found. They may have been deleted or deployed before versioning was enabled." })
+      return res
+        .status(404)
+        .json({
+          error:
+            "Target deployment build files not found. They may have been deleted or deployed before versioning was enabled.",
+        })
     }
 
     const currentSymlink = path.join(baseProjectDir, "current")
     if (fs.existsSync(currentSymlink)) {
-      try { fs.unlinkSync(currentSymlink) } catch(e) {
-        try { fs.rmdirSync(currentSymlink) } catch(e2) {}
+      try {
+        fs.unlinkSync(currentSymlink)
+      } catch (e) {
+        try {
+          fs.rmdirSync(currentSymlink)
+        } catch (e2) {}
       }
     }
 
     try {
       fs.symlinkSync(targetDeploymentDir, currentSymlink, "junction")
-    } catch(e) {
-      return res.status(500).json({ error: `Failed to create symlink: ${e.message}` })
+    } catch (e) {
+      return res
+        .status(500)
+        .json({ error: `Failed to create symlink: ${e.message}` })
     }
 
     res.status(200).json({ message: "Rollback successful" })
@@ -174,36 +203,45 @@ const handleCliRollback = async (req, res) => {
 
 const handleCliRename = async (req, res) => {
   try {
-    const { projectId } = req.params;
-    const { newSubdomain } = req.body;
+    const { projectId } = req.params
+    const { newSubdomain } = req.body
 
     if (!newSubdomain) {
-      return res.status(400).json({ error: "Subdomain is required" });
+      return res.status(400).json({ error: "Subdomain is required" })
     }
 
-    const cleanSubdomain = newSubdomain.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    const cleanSubdomain = newSubdomain
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-")
 
-    const existingProject = await Project.findOne({ subdomain: cleanSubdomain, _id: { $ne: projectId } });
+    const existingProject = await Project.findOne({
+      subdomain: cleanSubdomain,
+      _id: { $ne: projectId },
+    })
     if (existingProject) {
-      return res.status(400).json({ error: "Subdomain is already taken by another project" });
+      return res
+        .status(400)
+        .json({ error: "Subdomain is already taken by another project" })
     }
 
-    const project = await Project.findById(projectId);
+    const project = await Project.findById(projectId)
     if (!project) {
-      return res.status(404).json({ error: "Project not found" });
+      return res.status(404).json({ error: "Project not found" })
     }
 
     if (project.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: "Unauthorized" });
+      return res.status(403).json({ error: "Unauthorized" })
     }
 
-    project.subdomain = cleanSubdomain;
-    await project.save();
+    project.subdomain = cleanSubdomain
+    await project.save()
 
-    res.status(200).json({ message: "Subdomain updated successfully", projectId });
+    res
+      .status(200)
+      .json({ message: "Subdomain updated successfully", projectId })
   } catch (error) {
-    console.error("Error handling CLI rename:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error handling CLI rename:", error)
+    res.status(500).json({ error: "Internal server error" })
   }
 }
 
@@ -214,5 +252,5 @@ module.exports = {
   handleCliEnvPull,
   handleCliGetDeployments,
   handleCliRollback,
-  handleCliRename
+  handleCliRename,
 }

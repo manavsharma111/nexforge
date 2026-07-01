@@ -8,11 +8,9 @@ const getUserRepositories = async (req, res) => {
     const user = req.user
 
     if (!user.githubToken) {
-      return res
-        .status(400)
-        .json({
-          message: "GitHub token not found. Please log in with GitHub again.",
-        })
+      return res.status(400).json({
+        message: "GitHub token not found. Please log in with GitHub again.",
+      })
     }
 
     // Fetch user's repos, sorted by recently updated
@@ -44,18 +42,14 @@ const getUserRepositories = async (req, res) => {
     console.error("Error fetching GitHub repositories:", error.message)
     // Handle token expiration or invalid token from GitHub
     if (error.response && error.response.status === 401) {
-      return res
-        .status(401)
-        .json({
-          message: "GitHub token expired or invalid. Please re-authenticate.",
-        })
-    }
-    res
-      .status(500)
-      .json({
-        message: "Failed to fetch repositories from GitHub",
-        error: error.message,
+      return res.status(401).json({
+        message: "GitHub token expired or invalid. Please re-authenticate.",
       })
+    }
+    res.status(500).json({
+      message: "Failed to fetch repositories from GitHub",
+      error: error.message,
+    })
   }
 }
 

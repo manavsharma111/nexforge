@@ -141,7 +141,10 @@ export default function ProjectOverview({ projects, loading }) {
         </Card>
       ) : (
         <div className="space-y-6">
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
             <AnimatePresence mode="popLayout">
               {filteredProjects.slice(0, visibleCount).map((p, index) => (
                 <motion.div
@@ -150,7 +153,11 @@ export default function ProjectOverview({ projects, loading }) {
                   initial={{ opacity: 0, y: 30, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: (index % 3) * 0.1, duration: 0.4, ease: "easeOut" }}
+                  transition={{
+                    delay: (index % 3) * 0.1,
+                    duration: 0.4,
+                    ease: "easeOut",
+                  }}
                 >
                   <ProjectCard project={p} />
                 </motion.div>
