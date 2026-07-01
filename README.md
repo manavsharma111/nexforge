@@ -74,13 +74,34 @@ The core functionality of NexForge is driven by the backend build service and th
 
 ## ✨ Key Features
 
-- **Custom CLI Tooling**: Deploy directly from the terminal with bank-level Personal Access Token (PAT) security.
-- **Zero-Downtime Rollbacks**: Every build is uniquely identified. Rollback to a previous functional state instantly via symlink switching without waiting for a new build.
-- **Dynamic Subdomain Routing**: Seamlessly resolves hosts (e.g., `project.nexforge.com`) to the correct deployment path dynamically.
-- **Live Terminal Telemetry**: Watch your builds in real-time. Logs are streamed bi-directionally using WebSockets.
-- **Message Broker Architecture**: Integrates `BullMQ` and `Redis` to queue deployments robustly.
-- **Hardware Monitoring**: Real-time server metrics (CPU, RAM, Network utilization) rendered beautifully via `Recharts`.
-- **Premium Glassmorphic UI**: High-end user interface built with Framer Motion, GSAP, and Tailwind CSS.
+### 🛡️ Authentication & Security
+- **OAuth 2.0 Integration (Passport.js-style)**: Secure, robust GitHub OAuth integration for frictionless authentication.
+- **Dual JWT Token Architecture**: Employs short-lived **Access Tokens** (15 mins) and long-lived **Refresh Tokens** (7 days) for optimal security.
+- **Secure Storage**: Active session management utilizing HTTP-Only, Secure cookies to mitigate XSS attacks.
+- **Personal Access Tokens (PAT)**: Dedicated token generation (`cliToken`) for authenticating terminal sessions.
+- **Rate Limiting**: Defends endpoints against brute-force attacks via `express-rate-limit`.
+- **CORS Management**: Strict Cross-Origin Resource Sharing policies to secure API traffic.
+
+### 🏗️ Backend Core & Architecture
+- **Message Broker Architecture**: Integrates **BullMQ** and **Redis** to queue deployment jobs robustly, preventing server exhaustion.
+- **Native Process Execution**: Uses Node's `child_process` API and **PM2** to natively execute build commands and keep backend services alive.
+- **Dynamic Subdomain & Domain Routing**: Express-based reverse proxy (`http-proxy-middleware`) dynamically maps requests (e.g., `app.nexforge.com`) to Cloudflare R2 paths or PM2 ports based on MongoDB cache.
+- **Zero-Downtime Rollbacks**: Every build is uniquely identified. Rollback to a previous state instantly by shifting the live pointer without waiting for a new build.
+- **Live Terminal Telemetry**: Watch builds in real-time. Logs stream bi-directionally directly from worker processes to clients using WebSockets (`Socket.io`).
+
+### 🤖 AI, Analytics & Monitoring
+- **AI Assistant Integration**: Context-aware AI queries leveraging **OpenAI** and **Groq SDK** endpoints.
+- **Real-Time Hardware Monitoring**: Live streaming of server metrics (CPU load, RAM usage, Network I/O) rendered beautifully via `Recharts`.
+- **Project Analytics**: Real-time deployment tracking, domains management, and usage metrics per user.
+
+### 💻 Custom CLI Tooling (`nexforge-cli`)
+- **Direct Deployment**: Deploy directly from the terminal authenticated via secure PAT.
+- **Smart Archiving**: Packages projects into optimized `.zip` archives on the fly (ignoring large directories like `node_modules`).
+- **Terminal UI**: Stylish real-time logs and build indicators rendered with `chalk` and `ora`.
+
+### 🎨 Frontend Experience
+- **Premium Glassmorphic UI**: High-end user interface engineered with Framer Motion, GSAP, `clsx`, and Tailwind CSS.
+- **Responsive Dashboard**: Fully immersive and interactive dashboard for managing deployments, domains, and tokens.
 
 ---
 
