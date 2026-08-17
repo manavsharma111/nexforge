@@ -33,15 +33,20 @@ const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_URL].filter(
   Boolean,
 )
 
-const allowedPatterns = [/\.vercel\.app$/, /\.railway\.app$/]
+const allowedPatterns = [/\.vercel\.app$/, /\.railway\.app$/, /\.onrender\.com$/]
 
 app.use(
   cors({
     origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      // Also always allow our own base domain
+      const baseDomain = process.env.BASE_DOMAIN || ""
+      
       if (
         !origin ||
         allowedOrigins.includes(origin) ||
-        allowedPatterns.some((p) => p.test(origin))
+        allowedPatterns.some((p) => p.test(origin)) ||
+        (baseDomain && origin.includes(baseDomain))
       ) {
         callback(null, true)
       } else {

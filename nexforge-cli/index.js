@@ -14,7 +14,7 @@ const os = require("os")
 const CONFIG_DIR = path.join(os.homedir(), ".nexforge")
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json")
 
-const API_BASE_URL = "https://nexforge-backend.up.railway.app/api" // Make sure this points to your deployed backend URL in production
+const API_BASE_URL = "https://nexforge-lbxg.onrender.com/api" // Make sure this points to your deployed backend URL in production
 
 // Intercept axios requests to attach the CLI Token if it exists
 axios.interceptors.request.use((config) => {
@@ -288,20 +288,6 @@ program
         fs.unlinkSync(zipPath)
       }
     }
-  })
-
-// ROLLBACK COMMAND
-
-program
-  .command("rollback")
-  .description("Rollback to the previous stable deployment")
-  .action(async () => {
-    console.log(chalk.yellow("🚧 Rollback command is under construction."))
-    console.log(
-      chalk.cyan(
-        "Wait for the backend versioning architecture to be finalized before using this.",
-      ),
-    )
   })
 
 // ENV COMMANDS
