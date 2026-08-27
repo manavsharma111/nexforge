@@ -202,6 +202,9 @@ $ nexforge login
 # Initialize a NexForge configuration in an existing web project
 $ nexforge init
 
+# Scaffold a new NexForge ready project (React, Next.js, Express)
+$ nexforge create
+
 # Package your project and deploy it to the cloud
 $ nexforge deploy
 
@@ -213,6 +216,16 @@ $ nexforge rollback
 
 # Rename the subdomain of your project
 $ nexforge rename
+
+# View your current project's status, details, and live URL
+$ nexforge info
+
+# Manage custom domains linked to your project
+$ nexforge domains add <your-domain.com>
+$ nexforge domains ls
+
+# Instantly open your live project in the default web browser
+$ nexforge open
 ```
 
 ---

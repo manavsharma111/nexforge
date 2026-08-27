@@ -42,6 +42,8 @@ const FRONTEND_DEPS = {
   "lenis": "^1.3.23",
   "lucide-react": "^1.21.0",
   "react-icons": "^5.6.0",
+  "react-redux": "^9.1.1",
+  "@reduxjs/toolkit": "^2.2.3",
   "react-toastify": "^11.1.0",
   "recharts": "^3.8.1",
   "socket.io-client": "^4.8.3",
