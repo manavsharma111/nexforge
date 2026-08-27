@@ -19,6 +19,7 @@ const ProjectDetails = lazy(() => import("./pages/ProjectDetails"))
 const Docs = lazy(() => import("./pages/Docs"))
 const DeploymentDocs = lazy(() => import("./pages/DeploymentDocs"))
 import FloatingChatbot from "./components/common/FloatingChatbot"
+import CustomCursor from "./components/common/animation/CustomCursor"
 
 const App = () => {
   const dispatch = useDispatch()
@@ -43,8 +44,10 @@ const App = () => {
   }
 
   return (
-    <AnimatePresence mode="wait">
-      {isPublicLayout ? (
+    <>
+      <CustomCursor />
+      <AnimatePresence mode="wait">
+        {isPublicLayout ? (
         <motion.div
           key="public-layout"
           variants={pageVariants}
@@ -109,7 +112,8 @@ const App = () => {
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   )
 }
 
