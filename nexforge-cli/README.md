@@ -2,7 +2,7 @@
 
 The official Command Line Interface for **NexForge** - Your custom Platform as a Service (PaaS).
 Deploy, manage, and scale your applications directly from your terminal with zero friction!
-<a href="https://nexforge-zeta.vercel.app/">Visit Nexforge</a>
+<a href="https://nexforge-sandy.vercel.app/">Visit Nexforge</a>
 
 ## Installation
 
@@ -59,12 +59,17 @@ nexforge init
 nexforge create
 ```
 
-**Details:**
+**How it works (Step-by-Step):**
 
-- Interactively asks for your **Project Name** and **Tech Stack** (Next.js, MERN, Frontend, Backend).
-- Generates a fully configured folder structure matching NexForge's custom standards.
-- Pre-installs all necessary libraries (Tailwind, Framer Motion, AWS SDK, Mongoose, AI SDKs, Socket.io, etc.).
-- Automatically sets up boilerplate code like `server.js` or `App.jsx` and configures TailwindCSS.
+1. **Run the Command:** Type `nexforge create` in your terminal.
+2. **Project Name:** The CLI will ask for a project name (e.g., `my-awesome-app`). It will create a new folder with this name.
+3. **Select your Stack:** You will be prompted to choose from 4 professional templates:
+   - **Frontend Only (React + Vite):** Generates a full React structure with Tailwind CSS, Framer Motion, GSAP, and all your UI components pre-configured.
+   - **Backend Only (Node + Express):** Generates an industry-standard MVC architecture (Controllers, Routes, Models) with Express, Mongoose, Socket.io, Redis, AWS SDK, and AI SDKs pre-installed.
+   - **MERN Stack:** Automatically creates a parent folder containing both the `frontend` and `backend` structures side-by-side.
+   - **Next.js (App Router):** Generates a Next.js App Router project packed with all UI and Backend dependencies, including an `app/api` folder for your backend routes.
+4. **Automatic Setup:** The CLI will magically generate the exact folder structures, boilerplate code (like `server.js` or `App.jsx`), configuration files (`tailwind.config.js`), and automatically run `npm install` for you!
+5. **Ready to Deploy:** Once finished, simply `cd` into your new folder, run `nexforge init` to connect it to your account, and `nexforge deploy` to take it live!
 
 ---
 
@@ -154,6 +159,53 @@ nexforge rename
 - Asks for your new preferred subdomain.
 - Validates availability on the NexForge servers.
 - Instantly updates your live URL to the new subdomain.
+
+---
+
+### ℹ️ 9. `nexforge info`
+
+**Description:** View your current project's status and details.
+**Usage:**
+
+```bash
+nexforge info
+```
+
+**Details:**
+
+- Fetches and displays your project name, framework, custom domains, live URL, and latest deployment status directly in the terminal.
+
+---
+
+### 🌐 10. `nexforge domains`
+
+**Description:** Manage custom domains for your project.
+**Usage:**
+
+```bash
+nexforge domains add <your-domain.com>
+nexforge domains ls
+```
+
+**Details:**
+
+- `add`: Links a new custom domain to your project without opening the dashboard.
+- `ls`: Lists all custom domains currently linked to your project.
+
+---
+
+### 🌍 11. `nexforge open`
+
+**Description:** Opens your live project in your default web browser.
+**Usage:**
+
+```bash
+nexforge open
+```
+
+**Details:**
+
+- Fetches your project's live URL and instantly opens it in your host OS browser.
 
 ---
 

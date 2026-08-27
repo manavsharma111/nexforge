@@ -11,6 +11,9 @@ const {
   handleCliGetDeployments,
   handleCliRollback,
   handleCliRename,
+  handleCliInfo,
+  handleCliAddDomain,
+  handleCliGetDomains,
 } = require("../controllers/cli.controller")
 const { requireCliAuth } = require("../middlewares/cliAuthMiddleware")
 
@@ -59,5 +62,10 @@ router.post("/rollback/:projectId", requireCliAuth, handleCliRollback)
 
 // Renaming
 router.post("/rename/:projectId", requireCliAuth, handleCliRename)
+
+// Info and Domains
+router.get("/info/:projectId", requireCliAuth, handleCliInfo)
+router.post("/domains/:projectId", requireCliAuth, handleCliAddDomain)
+router.get("/domains/:projectId", requireCliAuth, handleCliGetDomains)
 
 module.exports = router

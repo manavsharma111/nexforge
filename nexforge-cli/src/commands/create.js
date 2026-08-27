@@ -116,7 +116,7 @@ app.listen(PORT, () => console.log(\`Server running on port \${PORT}\`));
 
 const setupFrontend = (targetDir) => {
   console.log(chalk.cyan("\n⚛️ Scaffolding Frontend (React + Vite)..."))
-  runCommand(`npx create-vite@latest ${path.basename(targetDir)} --template react`, path.dirname(targetDir))
+  fs.mkdirSync(targetDir, { recursive: true })
 
   createFolderStructure(path.join(targetDir, "src"), [
     "assets",
@@ -129,14 +129,69 @@ const setupFrontend = (targetDir) => {
     "utils",
   ])
 
+  // Create Vite Boilerplate
+  const viteConfig = `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+})`
+  fs.writeFileSync(path.join(targetDir, "vite.config.js"), viteConfig)
+
+  const indexHtml = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NexForge App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>`
+  fs.writeFileSync(path.join(targetDir, "index.html"), indexHtml)
+
+  const mainJsx = `import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)`
+  fs.writeFileSync(path.join(targetDir, "src", "main.jsx"), mainJsx)
+  
+  const appJsx = `import React from 'react'
+
+function App() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+      <h1 className="text-4xl font-bold">Welcome to NexForge</h1>
+    </div>
+  )
+}
+
+export default App`
+  fs.writeFileSync(path.join(targetDir, "src", "App.jsx"), appJsx)
+
   // Merge package.json
-  const pkgPath = path.join(targetDir, "package.json")
-  if (fs.existsSync(pkgPath)) {
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"))
-    pkg.dependencies = { ...pkg.dependencies, ...FRONTEND_DEPS, "react-router-dom": "^7.18.0" }
-    pkg.devDependencies = { ...pkg.devDependencies, tailwindcss: "^3.4.19", postcss: "^8.5.15", autoprefixer: "^10.5.0" }
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
+  const pkgJson = {
+    name: "frontend",
+    private: true,
+    version: "0.0.0",
+    type: "module",
+    scripts: {
+      dev: "vite",
+      build: "vite build",
+      preview: "vite preview"
+    },
+    dependencies: { ...FRONTEND_DEPS, "react": "^19.2.6", "react-dom": "^19.2.6", "react-router-dom": "^7.18.0" },
+    devDependencies: { "@vitejs/plugin-react": "^6.0.1", "vite": "^8.0.12", tailwindcss: "^3.4.19", postcss: "^8.5.15", autoprefixer: "^10.5.0" }
   }
+  fs.writeFileSync(path.join(targetDir, "package.json"), JSON.stringify(pkgJson, null, 2))
 
   // Tailwind config
   const twConfig = `/** @type {import('tailwindcss').Config} */

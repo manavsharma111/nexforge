@@ -166,6 +166,27 @@ export default function Docs() {
             Scaffold a new Next.js, MERN, React, or Express project with industry-standard folder structures and pre-installed NexForge dependencies.
           </p>
           <CodeSnippet code="nexforge create" />
+          
+          <div className="flex items-start mb-2 mt-4">
+            <StepBadge number="1" />
+            <p className="text-[#E4E4E7] leading-relaxed">
+              <strong>Run the Command:</strong> Type `nexforge create` in your terminal.
+            </p>
+          </div>
+          
+          <div className="flex items-start mb-2 mt-2">
+            <StepBadge number="2" />
+            <p className="text-[#E4E4E7] leading-relaxed">
+              <strong>Select your Stack:</strong> Choose from 4 professional templates (Next.js, MERN Stack, Frontend Only, or Backend Only).
+            </p>
+          </div>
+
+          <div className="flex items-start mb-12 mt-2">
+            <StepBadge number="3" />
+            <p className="text-[#E4E4E7] leading-relaxed">
+              <strong>Automatic Setup:</strong> The CLI will magically generate the exact folder structures, boilerplate code, configuration files, and automatically run `npm install` for you!
+            </p>
+          </div>
         </section>
 
         <section
@@ -251,6 +272,40 @@ export default function Docs() {
             for the currently deploying project.
           </p>
           <CodeSnippet code="nexforge logs" />
+
+          <h3
+            id="info"
+            className="text-xl font-medium text-[#FFFFFF] mb-4 mt-12 scroll-mt-8"
+          >
+            Project Info
+          </h3>
+          <p className="text-[#E4E4E7] leading-relaxed">
+            View your current project's status, live URL, and details directly in the terminal.
+          </p>
+          <CodeSnippet code="nexforge info" />
+
+          <h3
+            id="domains"
+            className="text-xl font-medium text-[#FFFFFF] mb-4 mt-12 scroll-mt-8"
+          >
+            Manage Custom Domains
+          </h3>
+          <p className="text-[#E4E4E7] leading-relaxed">
+            Add or list custom domains linked to your project.
+          </p>
+          <CodeSnippet code="nexforge domains add <your-domain.com>" />
+          <CodeSnippet code="nexforge domains ls" />
+
+          <h3
+            id="open"
+            className="text-xl font-medium text-[#FFFFFF] mb-4 mt-12 scroll-mt-8"
+          >
+            Open Live Project
+          </h3>
+          <p className="text-[#E4E4E7] leading-relaxed">
+            Instantly opens your project's live URL in your default web browser.
+          </p>
+          <CodeSnippet code="nexforge open" />
         </section>
       </div>
     </div>

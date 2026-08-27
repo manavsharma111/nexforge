@@ -2,6 +2,7 @@ const { enqueueDeployment } = require("../services/queue.service")
 const Project = require("../models/project.model")
 const Environment = require("../models/environment.model")
 const Deployment = require("../models/deployment.model")
+const Domain = require("../models/domain.model")
 const fs = require("fs")
 const path = require("path")
 
@@ -245,6 +246,78 @@ const handleCliRename = async (req, res) => {
   }
 }
 
+const handleCliInfo = async (req, res) => {
+  try {
+    const { projectId } = req.params
+
+    const project = await Project.findById(projectId).lean()
+    if (!project) return res.status(404).json({ error: "Project not found" })
+
+    // Get domains
+    const domains = await Domain.find({ projectId }).lean()
+    
+    // Get latest deployment status
+    const latestDeployment = await Deployment.findOne({ projectId })
+      .sort({ createdAt: -1 })
+      .lean()
+
+    const baseDomain = process.env.BASE_DOMAIN || "localhost"
+    const isLocal = baseDomain === "localhost"
+    const defaultLiveUrl = isLocal
+      ? "http://" + (project.subdomain || projectId) + `.${baseDomain}:8000/p/${projectId}`
+      : `https://${baseDomain}/p/${projectId}`
+
+    res.status(200).json({
+      project: {
+        ...project,
+        liveUrl: defaultLiveUrl,
+        domains: domains.map(d => d.name),
+        latestDeploymentStatus: latestDeployment ? latestDeployment.status : "NO DEPLOYMENT YET",
+        latestDeploymentDate: latestDeployment ? latestDeployment.createdAt : null
+      }
+    })
+  } catch (error) {
+    console.error("Error fetching CLI info:", error)
+    res.status(500).json({ error: "Internal server error" })
+  }
+}
+
+const handleCliAddDomain = async (req, res) => {
+  try {
+    const { projectId } = req.params
+    const { domain } = req.body
+
+    if (!domain) {
+      return res.status(400).json({ error: "Domain name is required" })
+    }
+    
+    const cleanDomain = domain.toLowerCase().trim()
+    
+    // Check if domain already linked anywhere
+    const existing = await Domain.findOne({ name: cleanDomain })
+    if (existing) {
+      return res.status(400).json({ error: "Domain is already in use" })
+    }
+
+    const newDomain = await Domain.create({ name: cleanDomain, projectId })
+    res.status(201).json({ message: "Domain added successfully", domain: newDomain.name })
+  } catch (error) {
+    console.error("Error adding CLI domain:", error)
+    res.status(500).json({ error: "Internal server error" })
+  }
+}
+
+const handleCliGetDomains = async (req, res) => {
+  try {
+    const { projectId } = req.params
+    const domains = await Domain.find({ projectId }).select("name createdAt -_id").lean()
+    res.status(200).json({ domains })
+  } catch (error) {
+    console.error("Error fetching CLI domains:", error)
+    res.status(500).json({ error: "Internal server error" })
+  }
+}
+
 module.exports = {
   handleCliDeploy,
   handleCliInit,
@@ -253,4 +326,7 @@ module.exports = {
   handleCliGetDeployments,
   handleCliRollback,
   handleCliRename,
+  handleCliInfo,
+  handleCliAddDomain,
+  handleCliGetDomains,
 }
