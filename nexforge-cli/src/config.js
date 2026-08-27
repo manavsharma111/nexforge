@@ -1,12 +1,12 @@
-const axios = require("axios")
-const fs = require("fs")
-const path = require("path")
-const os = require("os")
+import axios from 'axios'
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
 
-const CONFIG_DIR = path.join(os.homedir(), ".nexforge")
-const CONFIG_FILE = path.join(CONFIG_DIR, "config.json")
+export const CONFIG_DIR = path.join(os.homedir(), ".nexforge")
+export const CONFIG_FILE = path.join(CONFIG_DIR, "config.json")
 
-const API_BASE_URL = "https://nexforge-lbxg.onrender.com/api"
+export const API_BASE_URL = "https://nexforge-lbxg.onrender.com/api"
 
 // Intercept axios requests to attach the CLI Token if it exists
 axios.interceptors.request.use((config) => {
@@ -19,9 +19,11 @@ axios.interceptors.request.use((config) => {
   return config
 })
 
-module.exports = {
-  CONFIG_DIR,
-  CONFIG_FILE,
-  API_BASE_URL,
-  axios
+export { axios }
+
+export const getNexforgeConfig = () => {
+  if (fs.existsSync(CONFIG_FILE)) {
+    return JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"))
+  }
+  return {}
 }

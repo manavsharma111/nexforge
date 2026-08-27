@@ -1,13 +1,14 @@
-const fs = require("fs")
-const chalk = require("chalk")
-const { CONFIG_DIR, CONFIG_FILE } = require("../config")
+import fs from 'fs'
+import readlineModule from 'readline'
+import chalk from 'chalk'
+import { CONFIG_DIR, CONFIG_FILE } from '../config.js'
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command("login")
     .description("Log in to your NexForge account")
     .action(async () => {
-      const readline = require("readline").createInterface({
+      const readline = readlineModule.createInterface({
         input: process.stdin,
         output: process.stdout,
       })

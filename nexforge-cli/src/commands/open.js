@@ -1,12 +1,12 @@
-const fs = require("fs")
-const path = require("path")
-const axios = require("axios")
-const chalk = require("chalk")
-const ora = require("ora")
-const { exec } = require("child_process")
-const { getNexforgeConfig } = require("../config")
+import fs from 'fs'
+import path from 'path'
+import axios from 'axios'
+import chalk from 'chalk'
+import ora from 'ora'
+import { exec } from 'child_process'
+import { getNexforgeConfig } from '../config.js'
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command("open")
     .description("Open the live project in your browser")

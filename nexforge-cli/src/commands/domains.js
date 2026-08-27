@@ -1,11 +1,11 @@
-const fs = require("fs")
-const path = require("path")
-const axios = require("axios")
-const chalk = require("chalk")
-const ora = require("ora")
-const { getNexforgeConfig } = require("../config")
+import fs from 'fs'
+import path from 'path'
+import axios from 'axios'
+import chalk from 'chalk'
+import ora from 'ora'
+import { getNexforgeConfig } from '../config.js'
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command("domains <action> [domainName]")
     .description("Manage custom domains (actions: add, ls)")

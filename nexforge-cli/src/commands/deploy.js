@@ -1,12 +1,12 @@
-const fs = require("fs")
-const path = require("path")
-const chalk = require("chalk")
-const ora = require("ora")
-const archiver = require("archiver")
-const FormData = require("form-data")
-const { axios, API_BASE_URL, CONFIG_FILE } = require("../config")
+import fs from 'fs'
+import path from 'path'
+import chalk from 'chalk'
+import ora from 'ora'
+import archiver from 'archiver'
+import FormData from 'form-data'
+import { axios, API_BASE_URL, CONFIG_FILE } from '../config.js'
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command("deploy")
     .description("Deploy the current directory to NexForge")
@@ -71,7 +71,7 @@ module.exports = (program) => {
         console.log(chalk.gray(`Streaming live build logs...\n`))
 
         // Automatically stream logs after deployment
-        const io = require("socket.io-client")
+        const { default: io } = await import('socket.io-client')
         const socket = io(API_BASE_URL.replace("/api", ""), {
           transports: ["websocket", "polling"],
         })

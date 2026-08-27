@@ -1,23 +1,34 @@
 #!/usr/bin/env node
 
-const { program } = require("commander")
+import { program } from "commander"
 
 program
   .name("nexforge")
   .description("CLI to some next-level deployment magic for NexForge")
   .version("1.0.0")
 
-require("./src/commands/login")(program)
-require("./src/commands/init")(program)
-require("./src/commands/deploy")(program)
-require("./src/commands/env")(program)
-require("./src/commands/logs")(program)
-require("./src/commands/rollback")(program)
-require("./src/commands/rename")(program)
-require("./src/commands/create")(program)
-require("./src/commands/info")(program)
-require("./src/commands/domains")(program)
-require("./src/commands/open")(program)
+import loginCmd from "./src/commands/login.js";
+loginCmd(program);
+import initCmd from "./src/commands/init.js";
+initCmd(program);
+import deployCmd from "./src/commands/deploy.js";
+deployCmd(program);
+import envCmd from "./src/commands/env.js";
+envCmd(program);
+import logsCmd from "./src/commands/logs.js";
+logsCmd(program);
+import rollbackCmd from "./src/commands/rollback.js";
+rollbackCmd(program);
+import renameCmd from "./src/commands/rename.js";
+renameCmd(program);
+import createCmd from "./src/commands/create.js";
+createCmd(program);
+import infoCmd from "./src/commands/info.js";
+infoCmd(program);
+import domainsCmd from "./src/commands/domains.js";
+domainsCmd(program);
+import openCmd from "./src/commands/open.js";
+openCmd(program);
 
 // Parse the arguments passed by the user in the terminal
 program.parse(process.argv)

@@ -1,14 +1,15 @@
-const fs = require("fs")
-const chalk = require("chalk")
-const ora = require("ora")
-const { axios, API_BASE_URL, CONFIG_DIR, CONFIG_FILE } = require("../config")
+import readlineModule from 'readline'
+import fs from 'fs'
+import chalk from 'chalk'
+import ora from 'ora'
+import { axios, API_BASE_URL, CONFIG_DIR, CONFIG_FILE } from '../config.js'
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command("init")
     .description("Initialize a new NexForge project in the current directory")
     .action(async () => {
-      const readline = require("readline").createInterface({
+      const readline = readlineModule.createInterface({
         input: process.stdin,
         output: process.stdout,
       })

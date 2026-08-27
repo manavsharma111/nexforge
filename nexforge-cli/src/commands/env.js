@@ -1,10 +1,10 @@
-const fs = require("fs")
-const path = require("path")
-const chalk = require("chalk")
-const ora = require("ora")
-const { axios, API_BASE_URL, CONFIG_FILE } = require("../config")
+import fs from 'fs'
+import path from 'path'
+import chalk from 'chalk'
+import ora from 'ora'
+import { axios, API_BASE_URL, CONFIG_FILE } from '../config.js'
 
-module.exports = (program) => {
+export default (program) => {
   const envCommand = program
     .command("env")
     .description("Manage your environment variables")
@@ -33,7 +33,7 @@ module.exports = (program) => {
 
       const spinner = ora("Pushing environment variables...").start()
       try {
-        const dotenv = require("dotenv")
+        const { default: dotenv } = await import('dotenv')
         const envConfig = dotenv.parse(fs.readFileSync(envPath))
 
         const envs = Object.keys(envConfig).map((key) => ({

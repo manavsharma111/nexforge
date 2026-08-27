@@ -4,6 +4,13 @@ The official Command Line Interface for **NexForge** - Your custom Platform as a
 Deploy, manage, and scale your applications directly from your terminal with zero friction!
 <a href="https://nexforge-sandy.vercel.app/">Visit Nexforge</a>
 
+---
+### 🌟 Special Feature: Project Folder Structure Generator
+Try **`nexforge create`** to instantly scaffold Fullstack, React, Next.js, Vue, MongoDB, MySQL, and Postgres projects! It features an interactive UI and a **Zero-Bloat Dependency Selection** system that injects only the packages you want (Redux, GSAP, AI SDKs) for lightning-fast setups!
+
+*(💡 **Note:** `nexforge create` is a standalone tool. You can use it to generate projects instantly without needing to log in with GitHub or connect to a NexForge account!)*
+---
+
 ## Installation
 
 You can install the CLI globally via NPM:
@@ -52,7 +59,7 @@ nexforge init
 
 ### 🏗️ 3. `nexforge create`
 
-**Description:** Scaffold a new project (Next.js, MERN, React, or Express) with industry-standard folder structures and NexForge's rich dependencies.
+**Description:** The ultimate project generator. Scaffold a fully configured project (React, Next.js, Vue, MERN, Postgres, MySQL) with an interactive UI, blazing fast copy, and **Zero Bloat** dependency selection!
 **Usage:**
 
 ```bash
@@ -61,14 +68,17 @@ nexforge create
 
 **How it works (Step-by-Step):**
 
-1. **Run the Command:** Type `nexforge create` in your terminal.
-2. **Project Name:** The CLI will ask for a project name (e.g., `my-awesome-app`). It will create a new folder with this name.
-3. **Select your Stack:** You will be prompted to choose from 4 professional templates:
-   - **Frontend Only (React + Vite):** Generates a full React structure with Tailwind CSS, Framer Motion, GSAP, and all your UI components pre-configured.
-   - **Backend Only (Node + Express):** Generates an industry-standard MVC architecture (Controllers, Routes, Models) with Express, Mongoose, Socket.io, Redis, AWS SDK, and AI SDKs pre-installed.
-   - **MERN Stack:** Automatically creates a parent folder containing both the `frontend` and `backend` structures side-by-side.
-   - **Next.js (App Router):** Generates a Next.js App Router project packed with all UI and Backend dependencies, including an `app/api` folder for your backend routes.
-4. **Automatic Setup:** The CLI will magically generate the exact folder structures, boilerplate code (like `server.js` or `App.jsx`), configuration files (`tailwind.config.js`), and automatically run `npm install` for you!
+1. **Run the Command:** Type `nexforge create` in your terminal. You'll be greeted by a beautiful, interactive CLI.
+2. **Project Name:** Enter a name for your new app.
+3. **Select your Stack:** Choose from 3 primary modes:
+   - **Fullstack:** Automatically generates a combined frontend + backend repository.
+   - **Frontend Only:** Choose between **React + Vite**, **Next.js**, or **Vue + Vite**.
+   - **Backend Only:** Choose between **Express + MongoDB**, **Express + PostgreSQL**, or **Express + MySQL**.
+4. **Zero-Bloat Dependency Selection:** Instead of downloading a massive, bloated template, the CLI asks you exactly what you need:
+   - *Need Animations?* Select yes to inject GSAP & Framer Motion.
+   - *Need State Management?* Select yes to inject Redux Toolkit.
+   - *Need AI?* Select yes to inject OpenAI & Groq SDKs.
+   - The CLI intelligently injects *only* the packages you selected into your `package.json` for a lightning-fast install.
 5. **Ready to Deploy:** Once finished, simply `cd` into your new folder, run `nexforge init` to connect it to your account, and `nexforge deploy` to take it live!
 
 ---

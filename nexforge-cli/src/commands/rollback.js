@@ -1,9 +1,10 @@
-const fs = require("fs")
-const chalk = require("chalk")
-const ora = require("ora")
-const { axios, API_BASE_URL, CONFIG_FILE } = require("../config")
+import readlineModule from 'readline'
+import fs from 'fs'
+import chalk from 'chalk'
+import ora from 'ora'
+import { axios, API_BASE_URL, CONFIG_FILE } from '../config.js'
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command("rollback")
     .description("Rollback your live website to a previous deployment")
@@ -48,7 +49,7 @@ module.exports = (program) => {
           )
         })
 
-        const readline = require("readline").createInterface({
+        const readline = readlineModule.createInterface({
           input: process.stdin,
           output: process.stdout,
         })

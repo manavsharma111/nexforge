@@ -1,8 +1,8 @@
-const fs = require("fs")
-const chalk = require("chalk")
-const { API_BASE_URL, CONFIG_FILE } = require("../config")
+import fs from 'fs'
+import chalk from 'chalk'
+import { API_BASE_URL, CONFIG_FILE } from '../config.js'
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command("logs")
     .description("Stream live build logs for your NexForge project")
@@ -25,7 +25,7 @@ module.exports = (program) => {
         ),
       )
 
-      const io = require("socket.io-client")
+      const { default: io } = await import('socket.io-client')
       const socket = io(API_BASE_URL.replace("/api", ""), {
         transports: ["websocket", "polling"],
       })

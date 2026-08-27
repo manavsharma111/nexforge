@@ -163,28 +163,35 @@ export default function Docs() {
             3. Create a Project
           </h2>
           <p className="text-[#E4E4E7] leading-relaxed mb-6">
-            Scaffold a new Next.js, MERN, React, or Express project with industry-standard folder structures and pre-installed NexForge dependencies.
+            Scaffold a fully configured project (React, Next.js, Vue, MERN, Postgres, MySQL) with an interactive UI, blazing fast copy, and Zero Bloat dependency selection!
           </p>
           <CodeSnippet code="nexforge create" />
           
           <div className="flex items-start mb-2 mt-4">
             <StepBadge number="1" />
             <p className="text-[#E4E4E7] leading-relaxed">
-              <strong>Run the Command:</strong> Type `nexforge create` in your terminal.
+              <strong>Run the Command:</strong> Type `nexforge create` in your terminal. You'll be greeted by an interactive UI.
             </p>
           </div>
           
           <div className="flex items-start mb-2 mt-2">
             <StepBadge number="2" />
             <p className="text-[#E4E4E7] leading-relaxed">
-              <strong>Select your Stack:</strong> Choose from 4 professional templates (Next.js, MERN Stack, Frontend Only, or Backend Only).
+              <strong>Select your Stack:</strong> Choose from Fullstack, Frontend Only (React/Next.js/Vue), or Backend Only (MongoDB/Postgres/MySQL).
+            </p>
+          </div>
+
+          <div className="flex items-start mb-2 mt-2">
+            <StepBadge number="3" />
+            <p className="text-[#E4E4E7] leading-relaxed">
+              <strong>Zero-Bloat Selection:</strong> Select *only* the dependencies you need (Animations, State Management, AI SDKs). The CLI intelligently injects them.
             </p>
           </div>
 
           <div className="flex items-start mb-12 mt-2">
-            <StepBadge number="3" />
+            <StepBadge number="4" />
             <p className="text-[#E4E4E7] leading-relaxed">
-              <strong>Automatic Setup:</strong> The CLI will magically generate the exact folder structures, boilerplate code, configuration files, and automatically run `npm install` for you!
+              <strong>Automatic Setup:</strong> The CLI will magically generate the exact folder structures, inject your chosen dependencies, and silently run `npm install` for you!
             </p>
           </div>
         </section>

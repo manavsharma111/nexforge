@@ -1,318 +1,222 @@
-const fs = require("fs")
-const path = require("path")
-const chalk = require("chalk")
-const ora = require("ora")
-const inquirer = require("inquirer")
-const { execSync } = require("child_process")
-
-const BACKEND_DEPS = {
-  "@aws-sdk/client-s3": "^3.1075.0",
-  "@aws-sdk/lib-storage": "^3.1075.0",
-  "@google/genai": "^2.10.0",
-  "axios": "^1.18.0",
-  "bullmq": "^5.79.1",
-  "cookie-parser": "^1.4.7",
-  "cors": "^2.8.6",
-  "dotenv": "^17.4.2",
-  "express": "^5.2.1",
-  "express-rate-limit": "^8.5.2",
-  "extract-zip": "^2.0.1",
-  "groq-sdk": "^1.3.0",
-  "http-proxy-middleware": "^4.1.1",
-  "ioredis": "^5.11.1",
-  "jsonwebtoken": "^9.0.3",
-  "mime-types": "^3.0.2",
-  "mongoose": "^9.7.1",
-  "multer": "^2.2.0",
-  "node-cron": "^4.5.0",
-  "openai": "^6.44.0",
-  "os-utils": "^0.0.14",
-  "pm2": "^7.0.1",
-  "portfinder": "^1.0.38",
-  "redis": "^6.0.0",
-  "socket.io": "^4.8.3"
-}
-
-const FRONTEND_DEPS = {
-  "@heroicons/react": "^2.2.0",
-  "axios": "^1.18.0",
-  "clsx": "^2.1.1",
-  "framer-motion": "^12.40.0",
-  "gsap": "^3.15.0",
-  "lenis": "^1.3.23",
-  "lucide-react": "^1.21.0",
-  "react-icons": "^5.6.0",
-  "react-redux": "^9.1.1",
-  "@reduxjs/toolkit": "^2.2.3",
-  "react-toastify": "^11.1.0",
-  "recharts": "^3.8.1",
-  "socket.io-client": "^4.8.3",
-  "tailwind-merge": "^3.6.0"
-}
-
-const NEXTJS_DEPS = { ...FRONTEND_DEPS, ...BACKEND_DEPS }
-
-const createFolderStructure = (baseDir, folders) => {
-  folders.forEach((folder) => {
-    fs.mkdirSync(path.join(baseDir, folder), { recursive: true })
-  })
-}
+import fs from "fs"
+import { fileURLToPath } from 'url'
+import path from "path"
+import { execSync } from "child_process"
+import * as p from "@clack/prompts"
+import pc from "picocolors"
 
 const runCommand = (command, cwd) => {
   try {
-    execSync(command, { cwd, stdio: "inherit" })
+    execSync(command, { cwd, stdio: "ignore" }) // use ignore to keep it silent since we'll use a spinner
   } catch (error) {
-    console.error(chalk.red(`Failed to execute: ${command}`))
+    throw new Error(`Failed to execute: ${command}`)
   }
 }
 
-const setupBackend = (targetDir) => {
-  console.log(chalk.cyan("\n🚀 Scaffolding Backend (Express/Node)..."))
-  fs.mkdirSync(targetDir, { recursive: true })
-  createFolderStructure(path.join(targetDir, "src"), [
-    "controllers",
-    "models",
-    "routes",
-    "middlewares",
-    "services",
-    "utils",
-    "config",
-  ])
-
-  const pkgJson = {
-    name: "backend",
-    version: "1.0.0",
-    main: "src/server.js",
-    scripts: {
-      dev: "nodemon src/server.js",
-      start: "node src/server.js",
-    },
-    dependencies: BACKEND_DEPS,
-    devDependencies: {
-      nodemon: "^3.1.14",
-    },
-  }
-
-  fs.writeFileSync(path.join(targetDir, "package.json"), JSON.stringify(pkgJson, null, 2))
-  fs.writeFileSync(path.join(targetDir, ".env"), "PORT=8000\nMONGO_URI=")
-  fs.writeFileSync(path.join(targetDir, ".gitignore"), "node_modules\n.env\n")
-
-  const serverJs = `const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-app.get('/', (req, res) => res.send('NexForge Backend API is running!'));
-
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => console.log(\`Server running on port \${PORT}\`));
-`
-  fs.writeFileSync(path.join(targetDir, "src", "server.js"), serverJs)
-  
-  console.log(chalk.yellow("📦 Installing backend dependencies (this may take a while)..."))
-  runCommand("npm install", targetDir)
+const copyTemplate = (src, dest) => {
+  fs.cpSync(src, dest, { recursive: true })
 }
 
-const setupFrontend = (targetDir) => {
-  console.log(chalk.cyan("\n⚛️ Scaffolding Frontend (React + Vite)..."))
-  fs.mkdirSync(targetDir, { recursive: true })
-
-  createFolderStructure(path.join(targetDir, "src"), [
-    "assets",
-    "components",
-    "hooks",
-    "lib",
-    "pages",
-    "redux",
-    "services",
-    "utils",
-  ])
-
-  // Create Vite Boilerplate
-  const viteConfig = `import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-})`
-  fs.writeFileSync(path.join(targetDir, "vite.config.js"), viteConfig)
-
-  const indexHtml = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NexForge App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>`
-  fs.writeFileSync(path.join(targetDir, "index.html"), indexHtml)
-
-  const mainJsx = `import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import './index.css'
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)`
-  fs.writeFileSync(path.join(targetDir, "src", "main.jsx"), mainJsx)
-  
-  const appJsx = `import React from 'react'
-
-function App() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-      <h1 className="text-4xl font-bold">Welcome to NexForge</h1>
-    </div>
-  )
-}
-
-export default App`
-  fs.writeFileSync(path.join(targetDir, "src", "App.jsx"), appJsx)
-
-  // Merge package.json
-  const pkgJson = {
-    name: "frontend",
-    private: true,
-    version: "0.0.0",
-    type: "module",
-    scripts: {
-      dev: "vite",
-      build: "vite build",
-      preview: "vite preview"
-    },
-    dependencies: { ...FRONTEND_DEPS, "react": "^19.2.6", "react-dom": "^19.2.6", "react-router-dom": "^7.18.0" },
-    devDependencies: { "@vitejs/plugin-react": "^6.0.1", "vite": "^8.0.12", tailwindcss: "^3.4.19", postcss: "^8.5.15", autoprefixer: "^10.5.0" }
-  }
-  fs.writeFileSync(path.join(targetDir, "package.json"), JSON.stringify(pkgJson, null, 2))
-
-  // Tailwind config
-  const twConfig = `/** @type {import('tailwindcss').Config} */
-export default {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
-  theme: { extend: {} },
-  plugins: [],
-}`
-  fs.writeFileSync(path.join(targetDir, "tailwind.config.js"), twConfig)
-  fs.writeFileSync(path.join(targetDir, "postcss.config.js"), `export default { plugins: { tailwindcss: {}, autoprefixer: {} } }`)
-  
-  const css = `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n`
-  fs.writeFileSync(path.join(targetDir, "src", "index.css"), css)
-  
-  // Utils
-  const utilsJs = `import { clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs) {
-  return twMerge(clsx(inputs))
-}
-`
-  fs.writeFileSync(path.join(targetDir, "src", "lib", "utils.js"), utilsJs)
-
-  console.log(chalk.yellow("📦 Installing frontend dependencies..."))
-  runCommand("npm install", targetDir)
-}
-
-const setupNextJs = (targetDir) => {
-  console.log(chalk.cyan("\n🚀 Scaffolding Next.js App Router Project..."))
-  // We use npx create-next-app
-  const command = `npx create-next-app@latest ${path.basename(targetDir)} --js --tailwind --eslint --app --src-dir --import-alias "@/*"`
-  runCommand(command, path.dirname(targetDir))
-
-  // Create custom folders
-  createFolderStructure(path.join(targetDir, "src"), [
-    "app/api",
-    "components",
-    "hooks",
-    "lib",
-    "store",
-    "services",
-    "utils",
-  ])
-
-  // Merge package.json
-  const pkgPath = path.join(targetDir, "package.json")
-  if (fs.existsSync(pkgPath)) {
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"))
-    pkg.dependencies = { ...pkg.dependencies, ...NEXTJS_DEPS }
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
-  }
-
-  const utilsJs = `import { clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs) {
-  return twMerge(clsx(inputs))
-}
-`
-  fs.writeFileSync(path.join(targetDir, "src", "lib", "utils.js"), utilsJs)
-
-  console.log(chalk.yellow("📦 Installing Next.js additional dependencies..."))
-  runCommand("npm install", targetDir)
-}
-
-module.exports = (program) => {
+export default (program) => {
   program
     .command("create")
     .description("Generate a standardized project with industry folders and NexForge libraries")
     .action(async () => {
-      console.log(chalk.cyan("✨ Welcome to NexForge Project Generator!\n"))
-      
-      const answers = await inquirer.prompt([
+      p.intro(pc.bgCyan(pc.black(" ✨ NexForge Project Generator ")))
+
+      const project = await p.group(
         {
-          type: "input",
-          name: "projectName",
-          message: "What is your project name?",
-          validate: (input) => (input ? true : "Project name cannot be empty!"),
+          name: () =>
+            p.text({
+              message: "What is your project name?",
+              placeholder: "my-awesome-app",
+              validate: (value) => {
+                if (!value) return "Please enter a project name."
+                if (fs.existsSync(path.join(process.cwd(), value))) {
+                  return `Directory ${value} already exists.`
+                }
+              },
+            }),
+          stackType: () =>
+            p.select({
+              message: "Which stack would you like to build?",
+              initialValue: "frontend",
+              options: [
+                { value: "fullstack", label: "Fullstack (Frontend + Backend)" },
+                { value: "frontend", label: "Frontend Only" },
+                { value: "backend", label: "Backend Only" },
+              ],
+            }),
+          frontendFramework: ({ results }) => {
+            if (results.stackType === "backend") return
+            return p.select({
+              message: "Choose a Frontend framework",
+              options: [
+                { value: "react", label: "React + Vite" },
+                { value: "nextjs", label: "Next.js" },
+                { value: "vue", label: "Vue + Vite" },
+              ],
+            })
+          },
+          backendFramework: ({ results }) => {
+            if (results.stackType === "frontend" || results.frontendFramework === "nextjs") return
+            return p.select({
+              message: "Choose a Backend stack",
+              options: [
+                { value: "express-mongodb", label: "Node.js + Express + MongoDB" },
+                { value: "express-postgres", label: "Node.js + Express + PostgreSQL" },
+                { value: "express-sql", label: "Node.js + Express + MySQL" },
+              ],
+            })
+          },
         },
         {
-          type: "list",
-          name: "template",
-          message: "Which stack would you like to use?",
-          choices: [
-            "MERN Stack (Fullstack with /frontend and /backend)",
-            "Next.js (App Router)",
-            "Frontend Only (React + Vite)",
-            "Backend Only (Node + Express)",
-          ],
-        },
-      ])
+          onCancel: () => {
+            p.cancel("Operation cancelled.")
+            process.exit(0)
+          },
+        }
+      )
 
-      const { projectName, template } = answers
-      const targetDir = path.join(process.cwd(), projectName)
-
-      if (fs.existsSync(targetDir)) {
-        console.log(chalk.red(`\n❌ Directory ${projectName} already exists. Please choose a different name.`))
-        return
-      }
-
+      const targetDir = path.join(process.cwd(), project.name)
       fs.mkdirSync(targetDir, { recursive: true })
 
-      if (template.includes("Backend Only")) {
-        setupBackend(targetDir)
-      } else if (template.includes("Frontend Only")) {
-        setupFrontend(targetDir)
-      } else if (template.includes("Next.js")) {
-        setupNextJs(targetDir)
-      } else if (template.includes("MERN Stack")) {
-        console.log(chalk.magenta("\n🔥 Generating MERN Stack..."))
-        setupBackend(path.join(targetDir, "backend"))
-        setupFrontend(path.join(targetDir, "frontend"))
+      // Define dependency groups
+      const OPTIONAL_DEPS = {
+        frontend: {
+          animations: { "framer-motion": "^12.40.0", "gsap": "^3.15.0", "lenis": "^1.3.23" },
+          state: { "react-redux": "^9.1.1", "@reduxjs/toolkit": "^2.2.3" },
+          websockets: { "socket.io-client": "^4.8.3" },
+          charts: { "recharts": "^3.8.1" },
+          ui: { "react-toastify": "^11.1.0", "react-icons": "^5.6.0", "@heroicons/react": "^2.2.0" }
+        },
+        backend: {
+          ai: { "@google/genai": "^2.10.0", "openai": "^6.44.0", "groq-sdk": "^1.3.0" },
+          redis: { "redis": "^6.0.0", "ioredis": "^5.11.1", "bullmq": "^5.79.1" },
+          storage: { "@aws-sdk/client-s3": "^3.1075.0", "@aws-sdk/lib-storage": "^3.1075.0", "multer": "^2.2.0" },
+          websockets: { "socket.io": "^4.8.3" }
+        }
       }
 
-      console.log(chalk.green(`\n🎉 Project ${projectName} created successfully!`))
-      console.log(chalk.white(`\n👉 Next steps:`))
-      console.log(chalk.cyan(`   cd ${projectName}`))
-      console.log(chalk.cyan(`   nexforge init (to link with NexForge Platform)`))
-      console.log(chalk.cyan(`   nexforge deploy\n`))
+      // Ask Yes/No questions based on stack
+      const features = { frontend: {}, backend: {} }
+      
+      if (project.stackType === "frontend" || project.stackType === "fullstack") {
+        p.note("Frontend Features")
+        features.frontend.animations = await p.confirm({ message: "Add Animations? (Framer Motion, GSAP, Lenis)" })
+        features.frontend.state = await p.confirm({ message: "Add State Management? (Redux Toolkit)" })
+        features.frontend.ui = await p.confirm({ message: "Add UI Extras? (Toastify, React Icons)" })
+        features.frontend.websockets = await p.confirm({ message: "Add Websockets? (Socket.io Client)" })
+      }
+
+      if (project.stackType === "backend" || project.stackType === "fullstack") {
+        p.note("Backend Features")
+        features.backend.ai = await p.confirm({ message: "Add AI SDKs? (OpenAI, Gemini, Groq)" })
+        features.backend.redis = await p.confirm({ message: "Add Redis & Queues? (BullMQ, ioredis)" })
+        features.backend.storage = await p.confirm({ message: "Add S3 Storage? (AWS SDK, Multer)" })
+        features.backend.websockets = await p.confirm({ message: "Add Websockets? (Socket.io)" })
+      }
+
+      const s = p.spinner()
+      s.start("Scaffolding your project...")
+
+      const injectDependencies = (dir, stack) => {
+        const pkgPath = path.join(dir, "package.json")
+        if (!fs.existsSync(pkgPath)) return
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"))
+        
+        // Remove all optional deps first to make it a clean base
+        Object.values(OPTIONAL_DEPS[stack]).forEach(group => {
+           Object.keys(group).forEach(dep => {
+             if (pkg.dependencies) delete pkg.dependencies[dep]
+           })
+        })
+
+        // Inject only the selected ones
+        Object.keys(features[stack]).forEach(feature => {
+          if (features[stack][feature]) {
+            pkg.dependencies = { ...pkg.dependencies, ...OPTIONAL_DEPS[stack][feature] }
+          }
+        })
+        
+        fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
+      }
+
+      try {
+        const __filename = fileURLToPath(import.meta.url)
+        const __dirname = path.dirname(__filename)
+        const resolvedTemplatesDir = path.join(__dirname, '..', 'templates')
+
+        if (project.stackType === "fullstack") {
+          if (project.frontendFramework === "nextjs") {
+            s.message("Bootstrapping Next.js... (this might take a minute)")
+            runCommand(`npx create-next-app@latest ${project.name} --js --tailwind --eslint --app --src-dir --import-alias "@/*"`, process.cwd())
+            injectDependencies(targetDir, "frontend")
+            s.message("Installing selected NexForge dependencies for Next.js...")
+            runCommand("npm install", targetDir)
+          } else {
+            // Fullstack dynamic routing
+            const frontendTemplate = project.frontendFramework === "vue" ? "vue" : "react"
+            const backendTemplate = project.backendFramework || "express-mongodb"
+            
+            copyTemplate(path.join(resolvedTemplatesDir, "frontend", frontendTemplate), path.join(targetDir, "frontend"))
+            copyTemplate(path.join(resolvedTemplatesDir, "backend", backendTemplate), path.join(targetDir, "backend"))
+            
+            injectDependencies(path.join(targetDir, "frontend"), "frontend")
+            injectDependencies(path.join(targetDir, "backend"), "backend")
+
+            s.message("Installing frontend dependencies...")
+            runCommand("npm install", path.join(targetDir, "frontend"))
+            s.message("Installing backend dependencies...")
+            runCommand("npm install", path.join(targetDir, "backend"))
+          }
+        } else if (project.stackType === "frontend") {
+          if (project.frontendFramework === "nextjs") {
+             s.message("Bootstrapping Next.js... (this might take a minute)")
+             runCommand(`npx create-next-app@latest ${project.name} --js --tailwind --eslint --app --src-dir --import-alias "@/*"`, process.cwd())
+             injectDependencies(targetDir, "frontend")
+             s.message("Installing selected NexForge dependencies for Next.js...")
+             runCommand("npm install", targetDir)
+          } else if (project.frontendFramework === "react") {
+             copyTemplate(path.join(resolvedTemplatesDir, "frontend", "react"), targetDir)
+             injectDependencies(targetDir, "frontend")
+             s.message("Installing dependencies...")
+             runCommand("npm install", targetDir)
+          } else if (project.frontendFramework === "vue") {
+             copyTemplate(path.join(resolvedTemplatesDir, "frontend", "vue"), targetDir)
+             injectDependencies(targetDir, "frontend")
+             s.message("Installing dependencies...")
+             runCommand("npm install", targetDir)
+          } else {
+            s.stop("Framework template not yet available.")
+            return;
+          }
+        } else if (project.stackType === "backend") {
+          const backendTemplate = project.backendFramework || "express-mongodb"
+          copyTemplate(path.join(resolvedTemplatesDir, "backend", backendTemplate), targetDir)
+          injectDependencies(targetDir, "backend")
+          s.message("Installing dependencies...")
+          runCommand("npm install", targetDir)
+        }
+
+        s.stop(pc.green("Project scaffolded successfully!"))
+
+        let nextSteps = `cd ${project.name}\n`
+        if (project.stackType === "fullstack" && project.frontendFramework !== "nextjs") {
+          nextSteps += `cd frontend && npm run dev\n`
+          nextSteps += `cd ../backend && npm run dev`
+        } else {
+          nextSteps += `npm run dev`
+        }
+
+        p.note(nextSteps, "Next steps")
+
+        p.outro(pc.cyan("Ready to deploy? Run \`nexforge init\` and \`nexforge deploy\`!"))
+
+      } catch (err) {
+        s.stop(pc.red("An error occurred during scaffolding."))
+        p.log.error(err.message)
+        process.exit(1)
+      }
     })
 }
