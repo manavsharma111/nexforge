@@ -1,5 +1,5 @@
 config:
-  target: "http://localhost:8000"
+  target: "https://nexforge-lbxg.onrender.com"
   phases:
     - duration: 20
       arrivalRate: 50

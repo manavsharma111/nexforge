@@ -59,7 +59,7 @@ const githubCallback = async (req, res) => {
       },
     })
 
-    // GitHub users might have their email set to private. We need to fetch it separately if so.
+    // GitHub users email
     let email = userResponse.data.email
     if (!email) {
       const emailResponse = await axios.get(

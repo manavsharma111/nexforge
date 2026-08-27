@@ -4,7 +4,7 @@ const Project = require("../models/project.model")
 const Metric = require("../models/metric.model")
 const { getIo } = require("../services/socket.ioService")
 
-// CRON SCHEDULE: Runs cleanly every 5 seconds
+// CRON SCHEDULE: Runs every 5 seconds
 // Background telemetry tracking pattern
 cron.schedule("*/5 * * * * *", async () => {
   try {
@@ -23,7 +23,7 @@ cron.schedule("*/5 * * * * *", async () => {
       const ramUsage = parseFloat(
         ((1 - os.freememPercentage()) * 100).toFixed(2),
       )
-      const latency = parseFloat((Math.random() * (80 - 45) + 45).toFixed(2)) // Keep latency mock for now as it depends on network
+      const latency = parseFloat((Math.random() * (80 - 45) + 45).toFixed(2)) // Mock network latency for now
       const status5xx = 0
 
       const metricPayload = {
@@ -33,11 +33,11 @@ cron.schedule("*/5 * * * * *", async () => {
         status5xx,
       }
 
-      // Iterate through each active server partition
+      // Iterate through each active partition
       for (const project of activeProjects) {
         const roomId = project._id.toString()
 
-        // Persist natively inside MongoDB Time-Series collection engine
+        // Persist natively inside MongoDB Time-Series collection 
         await Metric.create({
           projectId: project._id,
           timestamp,
@@ -51,7 +51,7 @@ cron.schedule("*/5 * * * * *", async () => {
         })
       }
 
-      // Also emit globally to the Dashboard room for the overall System Metrics view
+      // Also emit globally to the Dashboard room for the system metrics view
       io.to("dashboard").emit("system-metrics", {
         time: timestamp.toLocaleTimeString([], {
           hour12: false,
@@ -67,7 +67,7 @@ cron.schedule("*/5 * * * * *", async () => {
     })
   } catch (error) {
     console.error(
-      " Critical exception inside Telemetry Background Agent:",
+      "Critical exception inside Telemetry Background Agent:",
       error.message,
     )
   }

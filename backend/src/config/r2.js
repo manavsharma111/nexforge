@@ -10,7 +10,7 @@ const fs = require("fs")
 const path = require("path")
 const mime = require("mime-types")
 
-// ─── R2 Client (S3-compatible) ───────────────────────────────────────────────
+// R2 Client
 
 const r2Client = new S3Client({
   region: "auto",
@@ -23,7 +23,7 @@ const r2Client = new S3Client({
 
 const BUCKET = process.env.CLOUDFLARE_R2_BUCKET
 
-// ─── Upload a single file ─────────────────────────────────────────────────────
+// Upload a single file
 const uploadFile = async (localFilePath, r2Key) => {
   const fileStream = fs.createReadStream(localFilePath)
   const stat = fs.statSync(localFilePath)
@@ -40,7 +40,7 @@ const uploadFile = async (localFilePath, r2Key) => {
   )
 }
 
-// ─── Upload entire local directory recursively ────────────────────────────────
+// Upload entire local directory recursively
 const uploadDirectory = async (localDirPath, r2Prefix, onProgress = null) => {
   const getAllFiles = (dir, baseDir = dir) => {
     const entries = fs.readdirSync(dir, { withFileTypes: true })
@@ -79,7 +79,7 @@ const uploadDirectory = async (localDirPath, r2Prefix, onProgress = null) => {
   return files.length
 }
 
-// ─── Download a single file from R2 ──────────────────────────────────────────
+// Download a single file from R2
 const downloadFile = async (r2Key, localFilePath) => {
   const response = await r2Client.send(
     new GetObjectCommand({ Bucket: BUCKET, Key: r2Key }),
@@ -95,7 +95,7 @@ const downloadFile = async (r2Key, localFilePath) => {
   })
 }
 
-// ─── Download entire R2 prefix to local directory ─────────────────────────────
+// Download entire R2 prefix to local directory
 const downloadDirectory = async (r2Prefix, localDirPath, onProgress = null) => {
   // List all objects under prefix
   const objects = []
@@ -132,7 +132,7 @@ const downloadDirectory = async (r2Prefix, localDirPath, onProgress = null) => {
   return objects.length
 }
 
-// ─── Delete all objects under a prefix ───────────────────────────────────────
+// Delete all objects under a prefix
 const deletePrefix = async (r2Prefix) => {
   let continuationToken = undefined
   let totalDeleted = 0
@@ -165,7 +165,7 @@ const deletePrefix = async (r2Prefix) => {
   return totalDeleted
 }
 
-// ─── Check if a prefix/file exists in R2 ─────────────────────────────────────
+// Check if a prefix/file exists in R2
 const prefixExists = async (r2Prefix) => {
   try {
     const res = await r2Client.send(
@@ -181,7 +181,7 @@ const prefixExists = async (r2Prefix) => {
   }
 }
 
-// ─── Stream a single file directly to HTTP response ──────────────────────────
+// Stream a single file to HTTP response
 const streamFileToResponse = async (r2Key, res, contentType = null) => {
   const response = await r2Client.send(
     new GetObjectCommand({ Bucket: BUCKET, Key: r2Key }),

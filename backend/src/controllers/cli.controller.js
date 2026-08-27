@@ -55,7 +55,7 @@ const handleCliInit = async (req, res) => {
         .json({ error: "Project name and framework are required" })
     }
 
-    // Check if project name is taken
+    // Checking if project name is already taken
     const existingProject = await Project.findOne({ projectName })
     if (existingProject) {
       return res

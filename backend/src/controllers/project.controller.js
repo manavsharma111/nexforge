@@ -64,7 +64,7 @@ const createProject = async (req, res) => {
 
     const generatedSubdomain = await generateUniqueSubdomain(projectName)
 
-    // 1. Create the Project
+    // Create the Project
     const project = await Project.create({
       projectName,
       description,
@@ -83,7 +83,7 @@ const createProject = async (req, res) => {
       collaborator,
     })
 
-    // 2. Save Environment Variables if provided
+    // Save Environment Variables if provided
     if (cleanedEnvVars && cleanedEnvVars.length > 0) {
       const Environment = require("../models/environment.model")
       const envDocs = cleanedEnvVars.map((env) => ({

@@ -3,7 +3,7 @@ const OpenAI = require("openai")
 const Groq = require("groq-sdk")
 require("dotenv").config()
 
-// ─── Timeout wrapper (prevents silent hangs) ─────────────────────────────────
+// Timeout wrapper thatprevents silent hangs
 const withTimeout = (promise, ms, modelName) =>
   Promise.race([
     promise,
@@ -15,7 +15,6 @@ const withTimeout = (promise, ms, modelName) =>
     ),
   ])
 
-// ─── Individual model callers ───────────────────────────────────────────────
 
 const callGemini = async (prompt) => {
   if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not set")
@@ -23,7 +22,7 @@ const callGemini = async (prompt) => {
 
   const response = await withTimeout(
     genai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.6-flash",
       contents: prompt,
       config: { temperature: 0.7, maxOutputTokens: 1024 },
     }),
@@ -31,7 +30,7 @@ const callGemini = async (prompt) => {
     "GEMINI",
   )
 
-  // response.text can be a getter OR a function depending on SDK version
+  // response
   const text =
     typeof response.text === "function" ? response.text() : response.text
   if (!text) throw new Error("Gemini returned empty response")
@@ -107,7 +106,7 @@ const callXAI = async (prompt) => {
   return response.choices[0].message.content
 }
 
-// ─── Model registry ─────────────────────────────────────────────────────────
+// Model Dictionary
 
 const MODEL_MAP = {
   GROQ: callGroq,
@@ -116,14 +115,11 @@ const MODEL_MAP = {
   XAI: callXAI,
 }
 
-// ─── Main: tries primary model, auto-falls back to others ───────────────────
-// Default order: GROQ → GEMINI → OPENAI → XAI
-// Override with AI_MODEL env var (e.g. AI_MODEL=GEMINI)
 
 const generateAIResponse = async (prompt) => {
   const primary = (process.env.AI_MODEL || "GROQ").toUpperCase()
 
-  // Primary first, then remaining models in registry order
+
   const allModels = Object.keys(MODEL_MAP)
   const orderedModels = [primary, ...allModels.filter((m) => m !== primary)]
 

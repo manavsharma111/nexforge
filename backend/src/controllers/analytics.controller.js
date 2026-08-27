@@ -28,7 +28,7 @@ const getProjectAnalytics = async (req, res) => {
     }
 
     let timeWindow = new Date()
-    let groupingFormat = "%Y-%m-%d %H:%M" // Default resolution format: minute-by-minute tracking
+    let groupingFormat = "%Y-%m-%d %H:%M" // Default time format: minute-by-minute
 
     // calculate time window and grouping based on range
     if (range === "24h") {
