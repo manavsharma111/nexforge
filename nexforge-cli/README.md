@@ -50,6 +50,24 @@ nexforge init
 
 ---
 
+### 🏗️ 3. `nexforge create`
+
+**Description:** Scaffold a new project (Next.js, MERN, React, or Express) with industry-standard folder structures and NexForge's rich dependencies.
+**Usage:**
+
+```bash
+nexforge create
+```
+
+**Details:**
+
+- Interactively asks for your **Project Name** and **Tech Stack** (Next.js, MERN, Frontend, Backend).
+- Generates a fully configured folder structure matching NexForge's custom standards.
+- Pre-installs all necessary libraries (Tailwind, Framer Motion, AWS SDK, Mongoose, AI SDKs, Socket.io, etc.).
+- Automatically sets up boilerplate code like `server.js` or `App.jsx` and configures TailwindCSS.
+
+---
+
 ### 🚀 3. `nexforge deploy`
 
 **Description:** Package and deploy your current directory to NexForge.

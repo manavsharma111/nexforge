@@ -14,6 +14,7 @@ require("./src/commands/env")(program)
 require("./src/commands/logs")(program)
 require("./src/commands/rollback")(program)
 require("./src/commands/rename")(program)
+require("./src/commands/create")(program)
 
 // Parse the arguments passed by the user in the terminal
 program.parse(process.argv)

@@ -53,6 +53,7 @@ export default function Docs() {
     { id: "setup", label: "Setup" },
     { id: "install", label: "1. Install", indent: true },
     { id: "login", label: "2. Log in", indent: true },
+    { id: "create", label: "3. Create Project", indent: true },
     { id: "common-commands", label: "Common Commands" },
     { id: "init", label: "Initialize Project", indent: true },
     { id: "deploy", label: "Deploy Code", indent: true },
@@ -150,6 +151,21 @@ export default function Docs() {
               local machine.
             </p>
           </div>
+
+          <h2
+            id="create"
+            className="text-2xl font-semibold text-[#FFFFFF] mb-6 flex items-center gap-2 group scroll-mt-8 mt-12"
+          >
+            <Hash
+              size={20}
+              className="text-[#A1A1AA] opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+            3. Create a Project
+          </h2>
+          <p className="text-[#E4E4E7] leading-relaxed mb-6">
+            Scaffold a new Next.js, MERN, React, or Express project with industry-standard folder structures and pre-installed NexForge dependencies.
+          </p>
+          <CodeSnippet code="nexforge create" />
         </section>
 
         <section
