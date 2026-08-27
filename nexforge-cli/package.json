@@ -1,6 +1,6 @@
 {
   "name": "nexforge-cli",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Custom Deployment CLI for NexForge",
   "main": "index.js",
   "bin": {

@@ -68,7 +68,7 @@ nexforge create
 
 ---
 
-### 🚀 3. `nexforge deploy`
+### 🚀 4. `nexforge deploy`
 
 **Description:** Package and deploy your current directory to NexForge.
 **Usage:**
@@ -86,7 +86,7 @@ nexforge deploy
 
 ---
 
-### 🌐 4. `nexforge env`
+### 🌐 5. `nexforge env`
 
 **Description:** Manage your environment variables securely.
 
@@ -108,7 +108,7 @@ nexforge env pull
 
 ---
 
-### 📜 5. `nexforge logs`
+### 📜 6. `nexforge logs`
 
 **Description:** Stream live build and deployment logs for your project.
 **Usage:**
@@ -123,7 +123,7 @@ nexforge logs
 
 ---
 
-### ⏪ 6. `nexforge rollback`
+### ⏪ 7. `nexforge rollback`
 
 **Description:** Instantly revert your live website to a previous stable deployment.
 **Usage:**
@@ -140,7 +140,7 @@ nexforge rollback
 
 ---
 
-### ✏️ 7. `nexforge rename`
+### ✏️ 8. `nexforge rename`
 
 **Description:** Rename the subdomain of your project.
 **Usage:**
