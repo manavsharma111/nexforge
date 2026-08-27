@@ -26,7 +26,7 @@ const callGemini = async (prompt) => {
       contents: prompt,
       config: { temperature: 0.7, maxOutputTokens: 1024 },
     }),
-    15000,
+    8000,
     "GEMINI",
   )
 
@@ -53,7 +53,7 @@ const callOpenAI = async (prompt) => {
         { role: "user", content: prompt },
       ],
     }),
-    15000,
+    8000,
     "OPENAI",
   )
   return response.choices[0].message.content
@@ -75,7 +75,7 @@ const callGroq = async (prompt) => {
         { role: "user", content: prompt },
       ],
     }),
-    15000,
+    8000,
     "GROQ",
   )
   return response.choices[0].message.content
@@ -100,7 +100,7 @@ const callXAI = async (prompt) => {
         { role: "user", content: prompt },
       ],
     }),
-    15000,
+    8000,
     "XAI",
   )
   return response.choices[0].message.content

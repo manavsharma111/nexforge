@@ -41,9 +41,9 @@ const aiUserSupport = async (req, res) => {
         if the prompt is about how to delete the subdomains of a project , give the command 
         if the prompt is about how to get the list of subdomains of a project , give the command 
         if the prompt is about how to use cli then also guide them
-        Navigation Guidence:
-        
 
+        IMPORTANT: Keep your responses extremely concise, short, and straight to the point to ensure fast generation. Do not write long paragraphs. Only provide the exact command and 1-2 lines of explanation.
+        Navigation Guidence:
         
         `
 
@@ -53,7 +53,7 @@ const aiUserSupport = async (req, res) => {
     return res.status(200).json({ response })
   } catch (error) {
     console.log(`Error generating response from AI - ${error}`)
-    return res.status(500).json({ message: "Internal Server Error" })
+    return res.status(200).json({ response: "I'm sorry, but I took too long to think! Could you please ask a shorter or more specific question?" })
   }
 }
 
