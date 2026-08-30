@@ -7,7 +7,7 @@ let metricsInterval
 const initSocket = (server) => {
   const allowedOrigins = [
     "http://localhost:5173",
-    process.env.CLIENT_URL,
+    "https://nexforge-sandy.vercel.app",
   ].filter(Boolean)
 
   // Pattern-based: allow any *.vercel.app or *.railway.app (your own deployments)

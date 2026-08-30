@@ -114,7 +114,7 @@ const githubCallback = async (req, res) => {
       avatarUrl: user.avatar,
     }
     res.redirect(
-      `${process.env.CLIENT_URL || "http://localhost:5173"}/auth/success?accessToken=${accessToken}&user=${encodeURIComponent(JSON.stringify(userObj))}`,
+      `https://nexforge-sandy.vercel.app/auth/success?accessToken=${accessToken}&user=${encodeURIComponent(JSON.stringify(userObj))}`,
     )
   } catch (error) {
     console.error("GitHub Auth Error:", error.message)

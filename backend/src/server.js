@@ -22,7 +22,7 @@ const cliRoutes = require("./routes/cli.route")
 const AskAIRoutes = require("./routes/ai.route")
 const { initRedis } = require("./services/redis.service")
 
-const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_URL].filter(
+const allowedOrigins = ["http://localhost:5173", "https://nexforge-sandy.vercel.app"].filter(
   Boolean,
 )
 
