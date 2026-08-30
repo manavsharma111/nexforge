@@ -41,7 +41,7 @@ const resolveProject = async (req) => {
     }
   }
   return project
-    ? { projectId: project._id.toString(), slug: project.subdomain }
+    ? { ...project, projectId: project._id.toString(), slug: project.subdomain }
     : null
 }
 

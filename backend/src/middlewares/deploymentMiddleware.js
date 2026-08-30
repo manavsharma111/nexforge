@@ -49,6 +49,25 @@ const setupDeploymentRoutes = (app) => {
         secure: process.env.NODE_ENV === "production",
       })
 
+      if (projectInfo.projectType === "NODE" && projectInfo.internalPort) {
+        const projectId = projectInfo.projectId
+        if (!proxies[projectId]) {
+          console.log(
+            `[PROXY] Initializing proxy for PM2 Backend on port ${projectInfo.internalPort} (Path-based)`,
+          )
+          proxies[projectId] = createProxyMiddleware({
+            target: `http://localhost:${projectInfo.internalPort}`,
+            changeOrigin: true,
+            ws: true,
+            pathRewrite: (path, req) => {
+              const match = path.match(/^\/p\/[^\/]+(.*)$/)
+              return match ? (match[1] || '/') : path
+            }
+          })
+        }
+        return proxies[projectId](req, res, next)
+      }
+
       const projectPath = req.path.replace(`/p/${slug}`, "") || "/"
       const served = await serveProjectDist(
         projectInfo.projectId,
@@ -76,6 +95,21 @@ const setupDeploymentRoutes = (app) => {
     if (!projectInfo) return next()
 
     try {
+      if (projectInfo.projectType === "NODE" && projectInfo.internalPort) {
+        const projectId = projectInfo.projectId
+        if (!proxies[projectId]) {
+          console.log(
+            `[PROXY] Initializing proxy for PM2 Backend on port ${projectInfo.internalPort} (Root)`,
+          )
+          proxies[projectId] = createProxyMiddleware({
+            target: `http://localhost:${projectInfo.internalPort}`,
+            changeOrigin: true,
+            ws: true,
+          })
+        }
+        return proxies[projectId](req, res, next)
+      }
+
       const served = await serveProjectDist(
         projectInfo.projectId,
         req.path,
