@@ -91,6 +91,7 @@ const setupDeploymentRoutes = (app) => {
   app.use(async (req, res, next) => {
     if (req.path.startsWith("/api")) return next()
     if (req.path.startsWith("/p/")) return next()
+    if (req.path.startsWith("/socket.io/")) return next()
     const projectInfo = await resolveProject(req)
     if (!projectInfo) return next()
 
