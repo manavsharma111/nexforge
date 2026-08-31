@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import {
   CheckCircle2,
   Clock,
@@ -9,6 +9,25 @@ import {
 import { Card } from "../ui/Card"
 
 export default function DeploymentTimeline({ project }) {
+  const [activeTime, setActiveTime] = useState(0)
+
+  // Reset timer when status changes
+  useEffect(() => {
+    setActiveTime(0)
+  }, [project?.status])
+
+  // Increment timer every second if active
+  useEffect(() => {
+    let interval
+    const isActive = ["QUEUED", "INSTALLING", "BUILDING"].includes(project?.status)
+    
+    if (isActive) {
+      interval = setInterval(() => {
+        setActiveTime((prev) => prev + 1)
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [project?.status])
   const steps = [
     {
       id: 1,
@@ -26,7 +45,7 @@ export default function DeploymentTimeline({ project }) {
         project?.status === "QUEUED" || project?.status === "INSTALLING"
           ? "active"
           : "complete",
-      time: "12s",
+      time: project?.status === "QUEUED" || project?.status === "INSTALLING" ? `${activeTime}s` : "12s",
       icon: Loader2,
     },
     {
@@ -39,7 +58,7 @@ export default function DeploymentTimeline({ project }) {
           : project?.status === "LIVE" || project?.status === "FAILED"
             ? "complete"
             : "pending",
-      time: "45s",
+      time: project?.status === "BUILDING" ? `${activeTime}s` : "45s",
       icon: PlayCircle,
     },
     {
