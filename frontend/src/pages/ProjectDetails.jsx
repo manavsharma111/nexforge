@@ -78,6 +78,10 @@ export default function ProjectDetails() {
       if (mounted) setLogs((prev) => [...prev, entry.message])
     })
 
+    socket.on("clear-logs", () => {
+      if (mounted) setLogs([])
+    })
+
     socket.on("status-change", ({ status, liveUrl }) => {
       if (!mounted) return
       setLocalProjectState((prev) =>

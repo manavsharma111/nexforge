@@ -29,6 +29,7 @@ const executeBuildStage = async (ctx, resolvedSrcDir) => {
     customEnv
   )
   await appendLog(`✅ Packages installed successfully.`)
+  if (ctx.updateStatus) await ctx.updateStatus("BUILDING")
 
   let projectType = project.projectType || "STATIC"
 

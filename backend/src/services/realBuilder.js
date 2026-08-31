@@ -36,6 +36,9 @@ const triggerDeploymentPipeline = async (
       { returnDocument: "after", upsert: true },
     )
 
+    // Emit event to frontend to clear the logs panel
+    io.to(roomId).emit("clear-logs")
+
     const token = project.owner && project.owner.githubToken ? project.owner.githubToken : null
     const logBatch = []
     let batchTimer = null
