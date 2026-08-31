@@ -61,10 +61,6 @@ const executeBuildStage = async (ctx, resolvedSrcDir) => {
     const buildCommand = project.buildCommand || "npm run build"
     const [cmd, ...args] = buildCommand.split(" ")
 
-    // Auto-inject NODE_OPTIONS to prevent Vite/Webpack from freezing on low RAM
-    if (!customEnv.NODE_OPTIONS) {
-      customEnv.NODE_OPTIONS = "--max-old-space-size=400"
-    }
     await executeCommand(
       process.platform === "win32" ? `${cmd}.cmd` : cmd,
       args,
@@ -96,10 +92,6 @@ const executeBuildStage = async (ctx, resolvedSrcDir) => {
       if (packageJson.scripts && packageJson.scripts.build) {
         await appendLog(`🔨 Running backend build step...`)
         
-        // Auto-inject NODE_OPTIONS to prevent OOM freezes
-        if (!customEnv.NODE_OPTIONS) {
-          customEnv.NODE_OPTIONS = "--max-old-space-size=400"
-        }
         await executeCommand(
           process.platform === "win32" ? "npm.cmd" : "npm",
           ["run", "build"],
