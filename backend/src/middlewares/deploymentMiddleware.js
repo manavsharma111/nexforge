@@ -128,7 +128,7 @@ const setupDeploymentRoutes = (app) => {
   
   app.use(async (req, res, next) => {
     const host = req.hostname
-    const baseDomain = process.env.BASE_DOMAIN || "localhost"
+    const baseDomain = process.env.BASE_DOMAIN || "nexforge-sandy.vercel.app"
 
     if (host.endsWith("." + baseDomain) && host !== baseDomain) {
       // Parse slug and optional preview deployment ID (format: my-app--deployment123.baseDomain)

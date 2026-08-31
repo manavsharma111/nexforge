@@ -152,12 +152,12 @@ const triggerDeploymentPipeline = async (
     // FINALIZATION 
     const latestProj = await Project.findById(projectId)
     const finalSubdomain = latestProj?.subdomain || projectId.toString()
-    const baseDomain = process.env.BASE_DOMAIN || "localhost"
+    const baseDomain = process.env.BASE_DOMAIN || "nexforge-sandy.vercel.app"
     const isLocal = baseDomain === "localhost"
 
     const liveUrl = isLocal
-      ? `http://${finalSubdomain}.${baseDomain}:8000`
-      : `https://${baseDomain}/p/${finalSubdomain}`
+      ? "http://" + finalSubdomain + `.${baseDomain}:8000/p/${finalSubdomain}`
+      : "https://" + baseDomain + `/p/${finalSubdomain}`
       
     await appendLog(`✅ Project will be served at path-based URL for stability.`)
     await updateStatus("LIVE", liveUrl)

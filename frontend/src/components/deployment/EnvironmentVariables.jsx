@@ -173,6 +173,11 @@ export default function EnvironmentVariables({ projectId, initialVars = [] }) {
                 onChange={(e) => updateVar(v.id, "key", e.target.value)}
                 placeholder="VARIABLE_NAME"
                 className="font-mono"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                data-1p-ignore
               />
             </div>
 
@@ -185,6 +190,11 @@ export default function EnvironmentVariables({ projectId, initialVars = [] }) {
                 onChange={(e) => updateVar(v.id, "value", e.target.value)}
                 placeholder="value"
                 className="font-mono pr-10"
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                data-1p-ignore
               />
               <button
                 onClick={() => toggleVisibility(v.id)}

@@ -235,14 +235,14 @@ const updateProject = async (req, res) => {
       // Regenerate liveUrl to ensure it's correct and avoid parsing errors
       if (project.liveUrl) {
         try {
-          const baseDomain = process.env.BASE_DOMAIN || "localhost"
+          const baseDomain = process.env.BASE_DOMAIN || "nexforge-sandy.vercel.app"
           const isLocal = baseDomain === "localhost"
           // To ensure compatibility with Railway's free tier and avoid SSL/domain provisioning issues,
           // we will consistently use a path-based URL for the live production link.
           // The subdomain will still be used for local development and can be used with custom domains.
           project.liveUrl = isLocal
-            ? `http://${formattedSubdomain}.${baseDomain}:8000` // Local dev can still use subdomains
-            : `https://${baseDomain}/p/${formattedSubdomain}` // Production uses path-based
+            ? "http://" + (project.subdomain || project._id) + `.${baseDomain}:8000/p/${project.subdomain || project._id}`
+            : "https://" + baseDomain + `/p/${project.subdomain || project._id}`
         } catch (e) {
           console.error("Failed to regenerate liveUrl during update", e)
         }
