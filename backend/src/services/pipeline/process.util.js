@@ -15,7 +15,12 @@ const executeCommand = (cmd, args, cwd, appendLog, customEnv = {}) => {
       child = spawn(cmd, args, { cwd, shell: false, env })
     }
 
+    const warnTimer = setTimeout(() => {
+      appendLog("\n⚠️ WARNING: This step is taking unusually long. It might be stuck due to insufficient RAM on the free server (e.g. Vite GC thrashing). Please consider bypassing cloud build or upgrading server memory.\n", "WARN")
+    }, 4 * 60 * 1000)
+
     child.on("error", (err) => {
+      if (warnTimer) clearTimeout(warnTimer)
       reject(new Error(`Failed to start command "${cmd}": ${err.message}`))
     })
 
@@ -28,6 +33,7 @@ const executeCommand = (cmd, args, cwd, appendLog, customEnv = {}) => {
     })
 
     child.on("close", (code) => {
+      if (warnTimer) clearTimeout(warnTimer)
       if (code === 0) resolve()
       else
         reject(
