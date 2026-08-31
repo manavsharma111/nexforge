@@ -196,6 +196,50 @@ export default function DeploymentDocs() {
           </div>
         </motion.section>
 
+        {/* Environment Variables Gotcha Section */}
+        <motion.section variants={itemVariants} className="mb-16">
+          <div className="bg-[#18181b] border border-blue-500/20 p-8 rounded-3xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] pointer-events-none" />
+            <h3 className="text-xl font-medium text-white mb-4 relative z-10 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                <Zap className="w-4 h-4 text-blue-400" />
+              </span>
+              Important: Environment Variables in React/Vite
+            </h3>
+            <p className="text-[#A1A1AA] leading-relaxed relative z-10">
+              Unlike Node.js backends that read environment variables at runtime, static frontend frameworks like React and Vite <strong>embed environment variables during the build process</strong>. 
+            </p>
+            <p className="text-[#A1A1AA] leading-relaxed relative z-10 mt-2">
+              If you are bypassing the cloud build (using the local CLI method above), adding variables in the NexForge Dashboard will <strong>not</strong> update your site automatically. You must add the variables to your local <code className="text-blue-300">.env</code> file, rebuild locally with <code className="text-blue-300">npm run build</code>, and then run <code className="text-blue-300">nexforge deploy</code>.
+            </p>
+          </div>
+        </motion.section>
+
+        {/* Node.js Port Gotcha Section */}
+        <motion.section variants={itemVariants} className="mb-16">
+          <div className="bg-[#18181b] border border-emerald-500/20 p-8 rounded-3xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none" />
+            <h3 className="text-xl font-medium text-white mb-4 relative z-10 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                <Server className="w-4 h-4 text-emerald-400" />
+              </span>
+              Important: Node.js Port Binding
+            </h3>
+            <p className="text-[#A1A1AA] leading-relaxed relative z-10">
+              When deploying Node.js or Express backends, NexForge automatically assigns a dynamic internal port to your application so it can be securely routed through our edge proxies.
+            </p>
+            <p className="text-[#A1A1AA] leading-relaxed relative z-10 mt-2">
+              You <strong>must</strong> ensure your server binds to the port provided by the environment variable <code className="text-emerald-300">process.env.PORT</code>, rather than hardcoding a port like 3000 or 8080. If your app does not listen on the correct port, the deployment will succeed but your API endpoints will be unreachable.
+            </p>
+            <div className="mt-4 bg-black/40 p-4 rounded-xl border border-white/5 relative z-10">
+              <code className="text-emerald-300 font-mono text-sm block">
+                const PORT = process.env.PORT || 8000;<br/>
+                app.listen(PORT, () ={'>'} console.log(`Listening on $&#123;PORT&#125;`));
+              </code>
+            </div>
+          </div>
+        </motion.section>
+
         {/* Managing Deployments Section */}
         <motion.section variants={itemVariants}>
           <div className="flex items-center gap-3 mb-8">

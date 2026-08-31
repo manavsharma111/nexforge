@@ -98,7 +98,10 @@ export default function Docs() {
           <div className="flex items-start mb-4">
             <p className="text-[#E4E4E7] leading-relaxed">
               Run the following command to install the CLI globally on your
-              system.
+              system. You can also view the package directly on{" "}
+              <a href="https://www.npmjs.com/package/nexforge-cli" target="_blank" rel="noopener noreferrer" className="text-[#6366F1] hover:underline">
+                NPM
+              </a>.
             </p>
           </div>
 
