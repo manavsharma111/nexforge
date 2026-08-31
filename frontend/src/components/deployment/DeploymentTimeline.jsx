@@ -10,6 +10,7 @@ import { Card } from "../ui/Card"
 
 export default function DeploymentTimeline({ project }) {
   const [activeTime, setActiveTime] = useState(0)
+  const [hasWarned, setHasWarned] = useState(false)
 
   const formatTime = (seconds) => {
     if (seconds < 60) return `${seconds}s`
@@ -30,11 +31,21 @@ export default function DeploymentTimeline({ project }) {
     
     if (isActive) {
       interval = setInterval(() => {
-        setActiveTime((prev) => prev + 1)
+        setActiveTime((prev) => {
+          const newTime = prev + 1
+          
+          // If build takes more than 4 minutes (240 seconds), warn the user
+          if (newTime === 240 && project?.status === "BUILDING" && !hasWarned) {
+            console.error("⚠️ Build is taking unusually long. It might be stuck due to insufficient RAM (GC Thrashing) on the free server. Please consider bypassing cloud build or upgrading server memory.")
+            setHasWarned(true)
+          }
+          
+          return newTime
+        })
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [project?.status])
+  }, [project?.status, hasWarned])
   const steps = [
     {
       id: 1,
@@ -132,6 +143,17 @@ export default function DeploymentTimeline({ project }) {
             </div>
           ))}
         </div>
+        
+        {hasWarned && project?.status === "BUILDING" && (
+          <div className="mt-6 p-4 bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-lg animate-[fadeIn_0.5s_ease]">
+            <p className="text-sm text-[#EF4444] flex items-start gap-2">
+              <span className="text-base leading-none">⚠️</span>
+              <span>
+                <strong>Build is taking unusually long.</strong> It might be stuck due to insufficient RAM on the free server (Vite is likely freezing). Check the browser console for details.
+              </span>
+            </p>
+          </div>
+        )}
       </div>
     </Card>
   )
