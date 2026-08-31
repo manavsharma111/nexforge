@@ -10,13 +10,13 @@ mongoose.connect("mongodb+srv://manavsharma3825:ASUStuf69@complete-backend.i1p18
           return process.exit(0);
       }
       
-      // Update the fields
+      // Update the fields back to dist
       project.buildCommand = "echo 'Already built'";
-      project.outputDirectory = "./";
+      project.outputDirectory = "dist";
       project.installCommand = "echo 'No install needed'";
       
       await project.save();
-      console.log("✅ Project 'w' updated successfully in database!");
+      console.log("✅ Project 'w' outputDirectory reverted to 'dist' in database!");
     } catch (err) {
       console.error("Error updating project:", err);
     }

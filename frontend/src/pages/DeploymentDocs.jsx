@@ -9,6 +9,7 @@ import {
   Shield,
   CheckCircle2,
   RefreshCw,
+  Terminal,
 } from "lucide-react"
 
 export default function DeploymentDocs() {
@@ -153,6 +154,44 @@ export default function DeploymentDocs() {
                   </div>
                 </motion.div>
               ))}
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Large Frontend Deployment Section */}
+        <motion.section variants={itemVariants} className="mb-16">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+              <Terminal className="w-5 h-5 text-orange-400" />
+            </div>
+            <h2 className="text-2xl font-semibold text-white tracking-tight">
+              Bypassing Cloud Build Limits (Large Projects)
+            </h2>
+          </div>
+
+          <div className="bg-[#18181b] border border-[rgba(255,255,255,0.08)] p-8 rounded-3xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-[80px] pointer-events-none" />
+            <h3 className="text-xl font-medium text-white mb-4 relative z-10">
+              Local Build & CLI Deploy Method
+            </h3>
+            <p className="text-[#A1A1AA] leading-relaxed relative z-10 mb-6">
+              For heavy React/Vite projects that exhaust free-tier server memory (512MB RAM) during cloud builds, you can bypass the cloud pipeline entirely by building locally and tricking the backend.
+            </p>
+            
+            <div className="space-y-4 relative z-10 text-sm">
+              <div className="bg-black/30 p-4 rounded-xl border border-white/5">
+                <p className="text-gray-300 font-medium mb-2">1. Build your project locally</p>
+                <code className="text-orange-300 font-mono text-xs">npm run build</code>
+              </div>
+              <div className="bg-black/30 p-4 rounded-xl border border-white/5">
+                <p className="text-gray-300 font-medium mb-2">2. Prepare the dist folder for backend bypass</p>
+                <p className="text-gray-400 text-xs mb-2">Navigate into your dist folder, create a dummy package.json, and nest the files in a dist/dist folder so the backend validation succeeds.</p>
+                <code className="text-orange-300 font-mono text-xs block">cd dist<br/>echo '&#123; "scripts": &#123; "build": "echo Done" &#125; &#125;' &gt; package.json<br/>mkdir dist && mv * dist/ (excluding package.json)</code>
+              </div>
+              <div className="bg-black/30 p-4 rounded-xl border border-white/5">
+                <p className="text-gray-300 font-medium mb-2">3. Deploy via NexForge CLI</p>
+                <code className="text-orange-300 font-mono text-xs">nexforge deploy</code>
+              </div>
             </div>
           </div>
         </motion.section>
