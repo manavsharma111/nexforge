@@ -1,6 +1,6 @@
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import { motion } from "framer-motion"
-import { Eye, EyeOff, Plus, Trash2, Save, RefreshCw } from "lucide-react"
+import { Eye, EyeOff, Plus, Trash2, Save, RefreshCw, Upload } from "lucide-react"
 import projectService from "../../services/projectService"
 import { Card } from "../ui/Card"
 import { Button } from "../ui/Button"
@@ -18,6 +18,7 @@ export default function EnvironmentVariables({ projectId, initialVars = [] }) {
       : [{ id: Date.now(), key: "", value: "", hidden: false }],
   )
   const [saving, setSaving] = useState(false)
+  const fileInputRef = useRef(null)
 
   const toggleVisibility = (id) => {
     setVars(vars.map((v) => (v.id === id ? { ...v, hidden: !v.hidden } : v)))
@@ -29,6 +30,53 @@ export default function EnvironmentVariables({ projectId, initialVars = [] }) {
 
   const updateVar = (id, field, val) => {
     setVars(vars.map((v) => (v.id === id ? { ...v, [field]: val } : v)))
+  }
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const content = event.target.result
+      const lines = content.split('\n')
+      const newVars = []
+      
+      lines.forEach((line) => {
+        const trimmedLine = line.trim()
+        if (trimmedLine && !trimmedLine.startsWith('#')) {
+          const separatorIndex = trimmedLine.indexOf('=')
+          if (separatorIndex !== -1) {
+            const key = trimmedLine.substring(0, separatorIndex).trim()
+            let value = trimmedLine.substring(separatorIndex + 1).trim()
+            
+            // Remove wrapping quotes if present
+            if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+              value = value.substring(1, value.length - 1)
+            }
+            
+            if (key) {
+              newVars.push({
+                id: Date.now() + Math.random(),
+                key,
+                value,
+                hidden: true
+              })
+            }
+          }
+        }
+      })
+
+      if (newVars.length > 0) {
+        // Filter out existing empty vars, then append new ones
+        const existingVars = vars.filter(v => v.key.trim() !== "" || v.value.trim() !== "")
+        setVars([...existingVars, ...newVars])
+      }
+    }
+    reader.readAsText(file)
+    
+    // Reset input so the same file can be uploaded again if needed
+    e.target.value = null
   }
 
   const handleSave = async () => {
@@ -43,9 +91,6 @@ export default function EnvironmentVariables({ projectId, initialVars = [] }) {
       })
       // Trigger a redeploy since env vars changed
       await projectService.deployProject(projectId)
-      alert(
-        "Environment variables saved! A redeploy has been triggered to apply the changes.",
-      )
     } catch (err) {
       console.error("Failed to save variables:", err)
       alert("Failed to save environment variables.")
@@ -65,18 +110,35 @@ export default function EnvironmentVariables({ projectId, initialVars = [] }) {
             Configure environment variables for your next deployment.
           </p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="gap-2 shrink-0"
-        >
-          {saving ? (
-            <RefreshCw size={16} className="animate-spin" />
-          ) : (
-            <Save size={16} />
-          )}
-          {saving ? "Saving & Redeploying..." : "Save & Redeploy"}
-        </Button>
+        <div className="flex gap-2">
+          <input 
+            type="file" 
+            accept=".env" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+            className="hidden" 
+          />
+          <Button
+            variant="secondary"
+            onClick={() => fileInputRef.current?.click()}
+            className="gap-2 shrink-0"
+          >
+            <Upload size={16} />
+            Upload .env
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="gap-2 shrink-0"
+          >
+            {saving ? (
+              <RefreshCw size={16} className="animate-spin" />
+            ) : (
+              <Save size={16} />
+            )}
+            {saving ? "Saving & Redeploying..." : "Save & Redeploy"}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-3">

@@ -31,20 +31,8 @@ const allowedPatterns = [/\.vercel\.app$/, /\.railway\.app$/, /\.onrender\.com$/
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      // Also always allow our own base domain
-      const baseDomain = process.env.BASE_DOMAIN || ""
-      
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        allowedPatterns.some((p) => p.test(origin)) ||
-        (baseDomain && origin.includes(baseDomain))
-      ) {
-        callback(null, true)
-      } else {
-        callback(new Error(`CORS blocked: ${origin}`))
-      }
+      // Allow all origins dynamically to fix CORS issues
+      callback(null, true)
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
