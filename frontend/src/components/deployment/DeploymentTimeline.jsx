@@ -11,6 +11,13 @@ import { Card } from "../ui/Card"
 export default function DeploymentTimeline({ project }) {
   const [activeTime, setActiveTime] = useState(0)
 
+  const formatTime = (seconds) => {
+    if (seconds < 60) return `${seconds}s`
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m}m ${s}s`
+  }
+
   // Reset timer when status changes
   useEffect(() => {
     setActiveTime(0)
@@ -45,7 +52,7 @@ export default function DeploymentTimeline({ project }) {
         project?.status === "QUEUED" || project?.status === "INSTALLING"
           ? "active"
           : "complete",
-      time: project?.status === "QUEUED" || project?.status === "INSTALLING" ? `${activeTime}s` : "12s",
+      time: project?.status === "QUEUED" || project?.status === "INSTALLING" ? formatTime(activeTime) : "12s",
       icon: Loader2,
     },
     {
@@ -58,7 +65,7 @@ export default function DeploymentTimeline({ project }) {
           : project?.status === "LIVE" || project?.status === "FAILED"
             ? "complete"
             : "pending",
-      time: project?.status === "BUILDING" ? `${activeTime}s` : "45s",
+      time: project?.status === "BUILDING" ? formatTime(activeTime) : "45s",
       icon: PlayCircle,
     },
     {
