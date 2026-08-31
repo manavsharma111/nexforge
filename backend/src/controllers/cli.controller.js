@@ -23,7 +23,7 @@ const handleCliDeploy = async (req, res) => {
     await enqueueDeployment(projectId, options)
 
     const project = await Project.findById(projectId)
-    const baseDomain = process.env.BASE_DOMAIN || "nexforge-sandy.vercel.app"
+    const baseDomain = process.env.BASE_DOMAIN || "nexforge-lbxg.onrender.com"
     const isLocal = baseDomain === "localhost"
 
     // Use path-based live URL to avoid subdomain SSL issues in production
@@ -261,7 +261,7 @@ const handleCliInfo = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean()
 
-    const baseDomain = process.env.BASE_DOMAIN || "nexforge-sandy.vercel.app"
+    const baseDomain = process.env.BASE_DOMAIN || "nexforge-lbxg.onrender.com"
     const isLocal = baseDomain === "localhost"
     const defaultLiveUrl = isLocal
       ? "http://" + (project.subdomain || projectId) + `.${baseDomain}:8000/p/${project.subdomain || projectId}`

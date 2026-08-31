@@ -1,6 +1,7 @@
 const mongoose = require("mongoose")
 const Metric = require("../models/metric.model")
 const Project = require("../models/project.model")
+const ProjectStats = require("../models/projectStats.model")
 const { getCache, setCache } = require("../services/redis.service")
 
 const getProjectAnalytics = async (req, res) => {
@@ -69,6 +70,40 @@ const getProjectAnalytics = async (req, res) => {
       timeWindowRequested: range || "1h",
       dataCount: performanceMatrixStack.length,
       metricsTimeline: performanceMatrixStack,
+    }
+
+    // --- Usage Analytics (Total Requests, Bandwidth, Unique Visitors) ---
+    // If range is 7d or 24h, we use the timeWindow from above.
+    // If we want "Last 30d" we can default to 30 days. The frontend sends "LAST 30D" text but query range is usually 30d
+    let usageTimeWindow = new Date()
+    if (range === "30d") usageTimeWindow.setDate(usageTimeWindow.getDate() - 30)
+    else if (range === "7d") usageTimeWindow.setDate(usageTimeWindow.getDate() - 7)
+    else if (range === "24h") usageTimeWindow.setHours(usageTimeWindow.getHours() - 24)
+    else usageTimeWindow.setDate(usageTimeWindow.getDate() - 30) // default to 30 days for usage stats
+
+    const dateStr = usageTimeWindow.toISOString().split('T')[0]
+    
+    const usageStats = await ProjectStats.find({
+      projectId: new mongoose.Types.ObjectId(id),
+      date: { $gte: dateStr }
+    })
+
+    let totalRequests = 0
+    let totalBandwidth = 0
+    const uniqueVisitorsSet = new Set()
+
+    usageStats.forEach(stat => {
+      totalRequests += stat.totalRequests || 0
+      totalBandwidth += stat.totalBandwidth || 0
+      if (stat.uniqueVisitors && Array.isArray(stat.uniqueVisitors)) {
+        stat.uniqueVisitors.forEach(ip => uniqueVisitorsSet.add(ip))
+      }
+    })
+
+    responseData.usage = {
+      totalRequests,
+      totalBandwidth,
+      uniqueVisitors: uniqueVisitorsSet.size,
     }
 
     // Cache the analytics result for 5 minutes

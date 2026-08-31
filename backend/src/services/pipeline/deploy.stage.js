@@ -28,10 +28,18 @@ const executeDeployStage = async (ctx, resolvedSrcDir) => {
     } catch (e) {}
 
     let uploadedCount = 0
+    let lastLoggedPercent = 0
     const totalFiles = await uploadDirectory(
       builtDistPath,
       r2DistPrefix,
-      (done, total) => { uploadedCount = done }
+      (done, total) => { 
+        uploadedCount = done 
+        const percent = Math.floor((done / total) * 100)
+        if (percent >= lastLoggedPercent + 10) {
+          appendLog(`⏳ Uploading build: ${percent}% (${done}/${total} files)`)
+          lastLoggedPercent = percent
+        }
+      }
     )
     await appendLog(`✅ Uploaded ${totalFiles} files to R2 at: ${r2DistPrefix}`)
 
@@ -51,7 +59,15 @@ const executeDeployStage = async (ctx, resolvedSrcDir) => {
     const appSrcDir = typeof resolvedSrcDir !== "undefined" ? resolvedSrcDir : projectDir
     await appendLog(`☁️ Uploading app to Cloudflare R2...`)
     const r2AppPrefix = `${r2DeploymentPrefix}/app`
-    await uploadDirectory(appSrcDir, r2AppPrefix)
+    
+    let lastLoggedPercent = 0
+    await uploadDirectory(appSrcDir, r2AppPrefix, (done, total) => {
+      const percent = Math.floor((done / total) * 100)
+      if (percent >= lastLoggedPercent + 10) {
+        appendLog(`⏳ Uploading app source: ${percent}% (${done}/${total} files)`)
+        lastLoggedPercent = percent
+      }
+    })
     await appendLog(`✅ App uploaded to R2.`)
 
     // Update 'current' pointer in R2

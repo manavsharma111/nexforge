@@ -152,7 +152,7 @@ const triggerDeploymentPipeline = async (
     // FINALIZATION 
     const latestProj = await Project.findById(projectId)
     const finalSubdomain = latestProj?.subdomain || projectId.toString()
-    const baseDomain = process.env.BASE_DOMAIN || "nexforge-sandy.vercel.app"
+    const baseDomain = process.env.BASE_DOMAIN || "nexforge-lbxg.onrender.com"
     const isLocal = baseDomain === "localhost"
 
     const liveUrl = isLocal

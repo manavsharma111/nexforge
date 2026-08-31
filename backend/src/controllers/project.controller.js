@@ -235,7 +235,7 @@ const updateProject = async (req, res) => {
       // Regenerate liveUrl to ensure it's correct and avoid parsing errors
       if (project.liveUrl) {
         try {
-          const baseDomain = process.env.BASE_DOMAIN || "nexforge-sandy.vercel.app"
+          const baseDomain = process.env.BASE_DOMAIN || "nexforge-lbxg.onrender.com"
           const isLocal = baseDomain === "localhost"
           // To ensure compatibility with Railway's free tier and avoid SSL/domain provisioning issues,
           // we will consistently use a path-based URL for the live production link.

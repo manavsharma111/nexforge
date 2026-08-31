@@ -4,14 +4,53 @@ const mime = require("mime-types")
 const { r2Client } = require("../config/r2")
 const { getCache, setCache } = require("../services/redis.service")
 const Project = require("../models/project.model")
+const ProjectStats = require("../models/projectStats.model")
+const crypto = require("crypto")
 const { resolveProject, serveProjectDist } = require("../utils/deploymentUtil")
+
+const trackUsage = async (projectId, req, res) => {
+  if (!projectId) return
+  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress
+  const ipHash = crypto.createHash("md5").update(ip || "unknown").digest("hex")
+  const bandwidth = res.socket ? res.socket.bytesWritten : 0
+
+  const date = new Date().toISOString().split("T")[0]
+
+  try {
+    await ProjectStats.updateOne(
+      { projectId, date },
+      {
+        $inc: { totalRequests: 1, totalBandwidth: Number(bandwidth) },
+        $addToSet: { uniqueVisitors: ipHash },
+      },
+      { upsert: true }
+    )
+  } catch (e) {
+    console.error("Error tracking usage", e)
+  }
+}
 
 const proxies = {}
 
 const setupDeploymentRoutes = (app) => {
+  app.use((req, res, next) => {
+    // Only track if it's a project deployment route (not internal APIs)
+    if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
+      return next()
+    }
+
+    res.on("finish", () => {
+      if (req.nexforgeProjectId) {
+        trackUsage(req.nexforgeProjectId, req, res)
+      }
+    })
+    next()
+  })
+
   app.use("/assets", async (req, res, next) => {
     const projectInfo = await resolveProject(req)
     if (!projectInfo) return next()
+    req.nexforgeProjectId = projectInfo.projectId
 
     const assetPath = req.originalUrl.split("?")[0]
 
@@ -42,6 +81,7 @@ const setupDeploymentRoutes = (app) => {
             "<h1>404 - Deployment Not Found</h1><p>Build not found in storage. Please redeploy.</p>",
           )
       }
+      req.nexforgeProjectId = projectInfo.projectId
 
       res.cookie("nexforge_project_id", projectInfo.projectId, {
         path: "/",
@@ -94,6 +134,7 @@ const setupDeploymentRoutes = (app) => {
     if (req.path.startsWith("/socket.io/")) return next()
     const projectInfo = await resolveProject(req)
     if (!projectInfo) return next()
+    req.nexforgeProjectId = projectInfo.projectId
 
     try {
       if (projectInfo.projectType === "NODE" && projectInfo.internalPort) {
@@ -128,7 +169,7 @@ const setupDeploymentRoutes = (app) => {
   
   app.use(async (req, res, next) => {
     const host = req.hostname
-    const baseDomain = process.env.BASE_DOMAIN || "nexforge-sandy.vercel.app"
+    const baseDomain = process.env.BASE_DOMAIN || "nexforge-lbxg.onrender.com"
 
     if (host.endsWith("." + baseDomain) && host !== baseDomain) {
       // Parse slug and optional preview deployment ID (format: my-app--deployment123.baseDomain)
@@ -156,6 +197,7 @@ const setupDeploymentRoutes = (app) => {
         if (!project) return res.status(404).send("Project not found")
 
         const projectId = project._id.toString()
+        req.nexforgeProjectId = projectId
       // Reverse Proxy
         if (project.projectType === "NODE" && project.internalPort) {
           if (previewId) {
